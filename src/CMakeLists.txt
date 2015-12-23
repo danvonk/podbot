@@ -1,33 +1,35 @@
 # src/ folder
-file(GLOB_RECURSE sources_main *h *.hpp *.cpp *.c)
-file(GLOB_RECURSE sources_url url/*.h url/*.cc)
 
 file(GLOB_RECURSE pb_root *.h *.hpp *.cpp *.c *.cc *.inl)
 file(GLOB_RECURSE pb_http http/*.h http/*.hpp http/*.cpp http/*.c http/*.cc http/*.inl)
 file(GLOB_RECURSE pb_common common/*.h common/*.hpp common/*.cpp common/*.c common/*.cc common/*.inl)
-
+file(GLOB_RECURSE pb_database db/*.h db/*.hpp db/*.cpp db/*.c db/*.cc db/*.inl)
 
 source_group(http FILES ${pb_http})
 source_group(common FILES ${pb_common})
+source_group(db FILES ${pb_database})
 
-set(sources_all
+set(pb_all
+        ${pb_database}
         ${pb_http}
         ${pb_common}
+        ${pb_common_log}
         ${pb_root}
 )
 
 include_directories(
-        podbot
+        ${MYSQL_INCLUDE_DIR}
         ${OPENSSL_INCLUDE_DIR}
-        ${BOOST_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIRS}
         #${Gumbo_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/src
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-add_executable(podbot ${sources_all})
+add_executable(podbot ${pb_all})
 target_link_libraries(podbot
-        ${BOOST_LIBRARIES}
+        ${MYSQL_LIBRARIES}
+        ${Boost_LIBRARIES}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
 )

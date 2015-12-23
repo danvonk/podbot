@@ -11,15 +11,18 @@ using asio::ip::tcp;
 http_parser_settings parser_settings_;
 
 
+//http_client::http_client(const std::shared_ptr<spdlog::logger>& log)
 http_client::http_client()
+	//: logger_(log)
 	: hps_(HeaderParserState::HeaderStart)
 	, ssl_ctx_(asio::ssl::context::sslv23)
 	, resolver_(service_)
 	, socket_(service_)
 	, ssl_socket_(service_, ssl_ctx_)
 {
+	//logger_->info("logging from http client");
 	ssl_ctx_.set_default_verify_paths();
-	ssl_ctx_.load_verify_file("C:/dev/httpclienttest/cacert.pem");
+	ssl_ctx_.load_verify_file("C:/dev/podbot_asio/res/cacert.pem");
 
 	http_parser_init(&parser_, HTTP_RESPONSE);
 

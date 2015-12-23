@@ -1,3 +1,6 @@
 .idea/
 bin/
 build/
+res/log/
+*.log
+*.sdf

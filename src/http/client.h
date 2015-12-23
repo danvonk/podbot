@@ -1,5 +1,4 @@
 #pragma once
-
 #include "common.h"
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -12,6 +11,7 @@
 #include "request.h"
 #include "response.h"
 #include <map>
+
 
 namespace {
 	enum class HeaderParserState {
@@ -26,8 +26,8 @@ namespace {
 namespace http {
 	class http_client {
 	public:
+		//http_client(const std::shared_ptr<spdlog::logger>& log);
 		http_client();
-
 		std::unique_ptr<Response> Req(Request* req);
 
 	private:
@@ -50,6 +50,7 @@ namespace http {
 		static int on_message_begin_cb(http_parser* parser);
 		static int on_header_complete_cb(http_parser* parser);
 
+		//std::shared_ptr<spdlog::logger> logger_;
 		HeaderParserState hps_;
 
 		boost::asio::io_service service_;
