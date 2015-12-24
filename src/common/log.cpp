@@ -115,3 +115,7 @@ void Log::push_record(boost::log::record&& rec)
 {
 	impl->lg.push_record(std::move(rec));
 }
+
+void Logger::InitLogging()
+{
+}

@@ -21,13 +21,14 @@ include_directories(
         ${MYSQL_INCLUDE_DIR}
         ${OPENSSL_INCLUDE_DIR}
         ${Boost_INCLUDE_DIRS}
-        #${Gumbo_INCLUDE_DIRS}
+        ${Gumbo_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/src
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 add_executable(podbot ${pb_all})
 target_link_libraries(podbot
+        ${Gumbo_LIBRARIES}
         ${MYSQL_LIBRARIES}
         ${Boost_LIBRARIES}
         ${OPENSSL_CRYPTO_LIBRARY}

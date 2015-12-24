@@ -5,9 +5,8 @@
 
 namespace po = boost::program_options;
 
-ConfigMgr::ConfigMgr(Log& log)
-	: log_(log)
-	, desc_("Podbot usage")
+ConfigMgr::ConfigMgr()
+	: desc_("Podbot usage")
 {
 	desc_.add_options()
 		("help,h", "Display this help message")
@@ -33,7 +32,7 @@ void ConfigMgr::ParseConfigFile(const std::string & path)
 			po::notify(vm_);
 		}
 		catch (const std::exception& e) {
-			PBLOG(log_, SeverityLevel::Critical) << "Could not parse config file. Check that it is in the correct location and that the syntax is valid.";
+			PBLOG_CRITICAL << "Could not parse config file. Check that it is in the correct location and that the syntax is valid.";
 		}
 	}
 }
@@ -45,7 +44,7 @@ void ConfigMgr::ParseCommandLine(int argc, char * agrv[])
 		po::notify(vm_);
 	}
 	catch (const std::exception& e) {
-		PBLOG(log_, SeverityLevel::Critical) << "Could not parse command line arguments. Check that the argument(s) supplied are valid.";
+		PBLOG_CRITICAL << "Could not parse command line arguments. Check that the argument(s) supplied are valid.";
 	}
 }
 

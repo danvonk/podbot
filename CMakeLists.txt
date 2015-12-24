@@ -13,7 +13,7 @@ set(Boost_USE_STATIC_RUNTIME     OFF)
 
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED log thread atomic system filesystem chrono program_options date_time regex)
-#find_package(Gumbo REQUIRED)
+find_package(Gumbo REQUIRED)
 find_package(MySQL REQUIRED)
 
 add_subdirectory(src)

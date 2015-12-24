@@ -9,6 +9,7 @@
 #include "common/log.h"
 #include "common/config.h"
 #include "db/connection.h"
+#include "db/prepared_statement.h"
 
 #include <cstdlib>
 //#include <mysql_connection.h>
@@ -21,70 +22,33 @@
 using namespace http;
 
 int main(int argc, char* argv[]) {
-	Log lg;
 	std::string configFile = "C:/dev/podbot_asio/res/podbot.cfg";
 
-	PBLOG_DEBUG(lg) << "    ____            ____          __ ";
-	PBLOG_DEBUG(lg) << "   / __ \\____  ____/ / /_  ____  / /_";
-	PBLOG_DEBUG(lg) << "  / /_/ / __ \\/ __  / __ \\/ __ \\/ __/";
-	PBLOG_DEBUG(lg) << " / ____/ /_/ / /_/ / /_/ / /_/ / /_  ";
-	PBLOG_DEBUG(lg) << "/_/    \\____/\\__,_/_.___/\\____/\\__/  ";
-	PBLOG_DEBUG(lg) << "                                     ";
-	PBLOG_DEBUG(lg) << "Config file: " << configFile;
-	PBLOG_DEBUG(lg) << "OpenSSL version: " << OPENSSL_VERSION_TEXT;
-	PBLOG_DEBUG(lg) << "Boost version: " << BOOST_VERSION / 100000 << "." << BOOST_VERSION / 100 % 1000 << "." << BOOST_VERSION % 100;
-	PBLOG_DEBUG(lg) << "<Ctrl-C> to stop.";
+	PBLOG_INFO << "  ____           _ _           _   ";
+	PBLOG_INFO << " |  _ \\ ___   __| | |__   ___ | |_ ";
+	PBLOG_INFO << " | |_) / _ \\ / _` | '_ \\ / _ \\| __|";
+	PBLOG_INFO << " |  __/ (_) | (_| | |_) | (_) | |_ ";
+	PBLOG_INFO << " |_|   \\___/ \\__,_|_.__/ \\___/ \\__|";
+	PBLOG_INFO;
+	PBLOG_INFO << "Config file: " << configFile;
+	PBLOG_INFO << "OpenSSL version: " << OPENSSL_VERSION_TEXT;
+	PBLOG_INFO << "Boost version: " << BOOST_VERSION / 100000 << "." << BOOST_VERSION / 100 % 1000 << "." << BOOST_VERSION % 100;
+	PBLOG_INFO << "<Ctrl-C> to stop.";
 
-	auto cfgMgr = std::make_unique<ConfigMgr>(lg);
+	auto cfgMgr = std::make_unique<ConfigMgr>();
 	cfgMgr->ParseCommandLine(argc, argv);
 	cfgMgr->ParseConfigFile(configFile);
 
-	/*try {
-		sql::Driver* dvr = get_driver_instance();
-		auto connection = dvr->connect("tcp://127.0.0.1:3306", "root", "");
-		connection->setSchema("test");
-		if (!connection->isValid()) {
-			PBLOG_CRITICAL(lg) << "Could not connect to database.";
-		}
-
-		auto stmnt = connection->createStatement();
-		auto res = stmnt->executeQuery("SELECT * FROM one WHERE id='1'");
-		while (res->next()) {
-			PBLOG_INFO(lg) << "Result is " << res->getString(2);
-		}
-
-		delete res;
-		delete stmnt;
-		delete connection;
-	}
-	catch (const sql::SQLException& e) {
-		PBLOG_ERROR(lg) << e.what();
-		PBLOG_ERROR(lg) << "mysql error: " << e.getErrorCode() << "," << e.getSQLState();
-	}
-*/
 	mysql_library_init(0, nullptr, nullptr);
 	auto conn = new db::Connection(cfgMgr.get());
 	conn->Open();
 
-	/*if (mysql_query(pConn, "SELECT * FROM one WHERE id='1'")) {
-		PBLOG_ERROR(lg) << "query error.";
-	}
+	auto ps = new db::PreparedStatement("INSERT INTO one (sint, sstring, ssbool) VALUES (?,?,?)");
+	ps->set_int32(0, 456);
+	ps->set_string(1, "this is also a string");
+	ps->set_bool(2, false);
 
-	MYSQL_RES* result = mysql_store_result(pConn);
-	MYSQL_ROW row;
-	while ((row = mysql_fetch_row(result))) {
-		for (int i = 0; i < mysql_num_fields(result); ++i) {
-			if (row[i] != nullptr) {
-				PBLOG_INFO(lg) << row[i];
-			}
-		}
-	}
-
-	const char* stm = "INSERT INTO one VALUES (?)";
-	MYSQL_STMT* prepStmt = mysql_stmt_init(pConn);
-	mysql_stmt_prepare(prepStmt, stm, strlen(stm));*/
-
-
+	conn->Execute(ps);
 
 	//try {
 	//	auto request = std::make_unique<Request>();
@@ -98,6 +62,7 @@ int main(int argc, char* argv[]) {
 	//	std::cerr << "Exception: " << e.what() << "\n";
 	//}
 
-
+	//delete conn;
+	//delete ps;
 	return 0;
 }

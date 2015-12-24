@@ -37,8 +37,6 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
 	return strm;
 }
 
-
-using namespace std;
 class Log
 {
 private:
@@ -83,9 +81,31 @@ public:
 	}
 };
 
+
+class Logger {
+public:
+	static Logger& getInstance() {
+		static Logger instance;
+		return instance;
+	}
+
+	void InitLogging();
+
+	Log& getLogger() {
+		return logger_;
+	}
+
+	Logger(Logger const&) = delete;
+	void operator=(Logger const&) = delete;
+private:
+	Log logger_;
+	Logger() {};
+
+};
+
 #define PBLOG(logger, lvl) BOOST_LOG_STREAM_SEV(logger, lvl)
-#define PBLOG_DEBUG(logger) PBLOG(logger, SeverityLevel::Debug)
-#define PBLOG_INFO(logger) PBLOG(logger, SeverityLevel::Info)
-#define PBLOG_WARNING(logger) PBLOG(logger, SeverityLevel::Warning)
-#define PBLOG_ERROR(logger) PBLOG(logger, SeverityLevel::Error)
-#define PBLOG_CRITICAL(logger) PBLOG(logger, SeverityLevel::Critical)
+#define PBLOG_DEBUG PBLOG(Logger::getInstance().getLogger(), SeverityLevel::Debug)
+#define PBLOG_INFO PBLOG(Logger::getInstance().getLogger(), SeverityLevel::Info)
+#define PBLOG_WARNING PBLOG(Logger::getInstance().getLogger(), SeverityLevel::Warning)
+#define PBLOG_ERROR PBLOG(Logger::getInstance().getLogger(), SeverityLevel::Error)
+#define PBLOG_CRITICAL PBLOG(Logger::getInstance().getLogger(), SeverityLevel::Critical)

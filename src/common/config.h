@@ -5,7 +5,7 @@
 //to be implemented
 class ConfigMgr {
 public:
-	ConfigMgr(Log& log);
+	ConfigMgr();
 	~ConfigMgr();
 	
 	void ParseConfigFile(const std::string& path);
@@ -27,7 +27,6 @@ public:
 	}
 
 private:
-	Log& log_;
 	boost::program_options::variables_map vm_;
 	boost::program_options::options_description desc_;
 };
