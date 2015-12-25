@@ -1,5 +1,4 @@
 #pragma once
-#include "common.h"
 #include <boost/log/attributes.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/common.hpp>

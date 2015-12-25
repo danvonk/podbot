@@ -65,7 +65,7 @@ namespace http {
 		std::string header_key_;
 		std::string header_value_;
 
-		http_parser parser_;
+		//http_parser parser_;
 		Response* response_ptr_;
 	};
 }

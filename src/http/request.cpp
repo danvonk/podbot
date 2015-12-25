@@ -14,15 +14,11 @@ Request::~Request()
 {
 }
 
-Url * Request::get_url()
-{
-	return &url_;
-}
+//Url * Request::get_url()
+//{
+//	return &url_;
+//}
 
-http_parser * Request::get_parser()
-{
-	return &parser_;
-}
 
 const std::string & Request::get_user_agent() const
 {
@@ -44,10 +40,10 @@ int Request::get_read_timeout()
 	return read_timeout_;
 }
 
-void Request::set_url(Url&& url)
-{
-	url_ = url;
-}
+//void Request::set_url(Url& url)
+//{
+//	url_ = url;
+//}
 
 void Request::set_retries(int retries)
 {
@@ -62,4 +58,14 @@ void Request::set_connect_timeout(int timeout)
 void Request::set_read_timeout(int timeout)
 {
 	read_timeout_ = timeout;
+}
+
+//void http::Request::set_url(Url && url)
+//{
+//	url_ = std::move(url);
+//}
+
+void http::Request::set_url(Url url)
+{
+	url_ = url;
 }

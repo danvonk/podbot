@@ -10,14 +10,15 @@
 #include "common/config.h"
 #include "db/connection.h"
 #include "db/prepared_statement.h"
-
-#include <cstdlib>
-//#include <mysql_connection.h>
-//#include <cppconn/driver.h>
-//#include <cppconn/exception.h>
-//#include <cppconn/resultset.h>
-//#include <cppconn/statement.h>
+#include "db/result.h"
+#include "db/field.h"
 #include <mysql.h>
+
+#include "http/url.hpp"
+#include "itunes.h"
+
+
+#include <regex>
 
 using namespace http;
 
@@ -43,26 +44,25 @@ int main(int argc, char* argv[]) {
 	auto conn = new db::Connection(cfgMgr.get());
 	conn->Open();
 
-	auto ps = new db::PreparedStatement("INSERT INTO one (sint, sstring, ssbool) VALUES (?,?,?)");
-	ps->set_int32(0, 456);
-	ps->set_string(1, "this is also a string");
-	ps->set_bool(2, false);
+	//auto results = conn->ReturnExecQuery("SELECT * FROM one WHERE id=1");
+	//results->NextRow();
+	//std::cout << "Id is " << (*results)[1].GetU32();
 
-	conn->Execute(ps);
+	//Url url("https://danvonk.com?q=q1");
+	//std::cout << url.str() << "\n";
+	//std::cout << "Size of queries: " << url.query().size() << "\n";
+	//std::cout << url.query(0).val() << "\n";
 
-	//try {
-	//	auto request = std::make_unique<Request>();
-	//	request->set_url(Url("https://danvonk.com"));
+	Itunes it(*conn);
+	it.ParseRSS("http://frogpants.com/feed/");
 
-	//	http_client* cl = new http_client();
-	//	//auto res = cl->Req(request.get());
-	//	//std::cout << "Response size: " << res->get_content().size() << "\n";
-	//}
-	//catch (const std::exception& e) {
-	//	std::cerr << "Exception: " << e.what() << "\n";
-	//}
 
-	//delete conn;
-	//delete ps;
+
+	//auto ps = new db::PreparedStatement("INSERT INTO one (sint, sstring, ssbool) VALUES (?,?,?)");
+	//ps->set_int32(0, 456);
+	//ps->set_string(1, "this is also a string");
+	//ps->set_bool(2, false);
+
+	//conn->Execute(ps);
 	return 0;
 }

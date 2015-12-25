@@ -1,6 +1,8 @@
 #pragma once
 #include "common.h"
 #include "common/config.h"
+
+#include "result.h"
 #include <mysql.h>
 
 namespace db {
@@ -26,6 +28,9 @@ namespace db {
 
 		void Execute(PreparedStatement* ps);
 		u64 ExecuteAndReturnID(PreparedStatement* ps);
+
+		void ExecuteQuery(const std::string& sql);
+		std::unique_ptr<Result> ReturnExecQuery(const std::string& sql);
 
 		MYSQL* get_mysql() {
 			return mysql_;

@@ -24,7 +24,7 @@ http_client::http_client()
 	ssl_ctx_.set_default_verify_paths();
 	ssl_ctx_.load_verify_file("C:/dev/podbot_asio/res/cacert.pem");
 
-	http_parser_init(&parser_, HTTP_RESPONSE);
+	//http_parser_init(&parser_, HTTP_RESPONSE);
 
 	parser_settings_.on_url = http_client::on_url_cb;
 	parser_settings_.on_header_field = http_client::on_header_field_cb;
@@ -32,27 +32,34 @@ http_client::http_client()
 	parser_settings_.on_body = http_client::on_body_cb;
 	parser_settings_.on_headers_complete = http_client::on_header_complete_cb;
 
-	parser_.data = this;
+	/*parser_.data = this;*/
 }
 
 std::unique_ptr<Response> http_client::Req(Request* req)
 {
 	bool usingSSL = false;
 	auto res = std::make_unique<Response>();
+
+	//initialise parser
+	res->parser_.data = this;
+	http_parser_init(&res->parser_, HTTP_RESPONSE);
+
+
+
 	response_ptr_ = res.get();
 	//try {
-		if (req->get_url()->scheme() == "https") {
+		if (req->get_url().scheme() == "https") {
 			usingSSL = true;
 		}
 
 		std::ostream req_str(&request_);
-		req_str << "GET " << req->get_url()->pathForRequest() << " HTTP/1.0\r\n";
-		req_str << "Host: " << req->get_url()->host() << "\r\n";
+		req_str << "GET " << req->get_url().pathForRequest() << " HTTP/1.0\r\n";
+		req_str << "Host: " << req->get_url().host() << "\r\n";
 		req_str << "Accept: */*\r\n";
 		req_str << "Connection: close\r\n\r\n";
 
 		//ssl_socket_.set_verify_callback(boost::asio::ssl::rfc2818_verification("danvonk.com"));
-		tcp::resolver::query query(req->get_url()->host(), req->get_url()->scheme());
+		tcp::resolver::query query(req->get_url().host(), req->get_url().scheme());
 		std::ostringstream sstr;
 
 		if (usingSSL) {
@@ -71,7 +78,7 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 				sstr << &response_;
 			}
 			if (error == asio::error::eof) {
-				if (http_parser_execute(&parser_, &parser_settings_, nullptr, 0) != 0) {
+				if (http_parser_execute(&res->parser_, &parser_settings_, nullptr, 0) != 0) {
 					std::cerr << "Parsing error.\n";
 				}
 			}
@@ -89,7 +96,7 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 				sstr << &response_;
 			}
 			if (error == asio::error::eof) {
-				if (http_parser_execute(&parser_, &parser_settings_, nullptr, 0) != 0) {
+				if (http_parser_execute(&res->parser_, &parser_settings_, nullptr, 0) != 0) {
 					std::cerr << "Parsing error.\n";
 				}
 			}
@@ -99,9 +106,20 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 
 		}
 
-		size_t bytes_parsed = http_parser_execute(&parser_, &parser_settings_, sstr.str().c_str(), strlen(sstr.str().c_str()));
-		res->set_status_code(parser_.status_code);
+		size_t bytes_parsed = http_parser_execute(&res->parser_, &parser_settings_, sstr.str().c_str(), strlen(sstr.str().c_str()));
+		res->set_status_code(res->parser_.status_code);
 		service_.run();
+
+		if (usingSSL) {
+			boost::system::error_code ec;
+			ssl_socket_.lowest_layer().shutdown(tcp::socket::shutdown_receive);
+			ssl_socket_.lowest_layer().close();
+		}
+		else {
+			socket_.shutdown(tcp::socket::shutdown_receive);
+			socket_.close();
+		}
+
 		return res;
 	//}
 	//catch (std::exception& e) {
@@ -129,7 +147,6 @@ int http_client::on_url(const char * buf, size_t len)
 
 int http_client::on_header_field(const char * buf, size_t len)
 {
-	std::cout << "[debug] " << std::string(buf, len);
 	if (hps_ == HeaderParserState::HeaderStart) {
 		//first call
 		header_key_.append(buf, len);
@@ -148,7 +165,6 @@ int http_client::on_header_field(const char * buf, size_t len)
 
 int http_client::on_header_value(const char * buf, size_t len)
 {
-	std::cout << ": " << std::string(buf, len) << "\n";
 	hps_ = HeaderParserState::HeaderKey;
 	header_value_.append(buf, len);
 	return 0;

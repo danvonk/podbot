@@ -1,4 +1,6 @@
 #include "log.h"
+#include "common.h"
+
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/core/null_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

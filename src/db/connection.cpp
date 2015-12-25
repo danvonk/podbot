@@ -8,7 +8,7 @@ Connection::Connection(ConfigMgr * cfg)
 {
 	conn_info_.user = cfg->GetValue<std::string>("db_user", "root");
 	conn_info_.password = cfg->GetValue<std::string>("db_pass", "");
-	conn_info_.database = cfg->GetValue<std::string>("db_name", "test");
+	conn_info_.database = cfg->GetValue<std::string>("db_name", "dev");
 	conn_info_.host = cfg->GetValue<std::string>("db_host", "localhost");
 	conn_info_.port = cfg->GetValue<int>("db_port", 3306);
 }
@@ -94,19 +94,61 @@ enum_field_types CToMySQLType(TPreparedStatementDataTypeKey key)
 void Connection::Execute(PreparedStatement * ps)
 {
 	ps->statement_ = mysql_stmt_init(mysql_);
+	if (!ps->statement_) {
+		PBLOG_CRITICAL << "Could not execute statement!\n";
+		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
+	}
 	const char* sql = ps->query_.c_str();
-	mysql_stmt_prepare(ps->statement_, sql, strlen(sql));
+
+	if (mysql_stmt_prepare(ps->statement_, sql, strlen(sql))) {
+		PBLOG_CRITICAL << "Could not execute statement!\n";
+		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
+	}
 
 	ps->BindBuffers(mysql_stmt_param_count(ps->statement_));
 
 	mysql_stmt_bind_param(ps->statement_, ps->bind_);
-	mysql_stmt_execute(ps->statement_);
+	if (mysql_stmt_execute(ps->statement_) != 0) {
+		PBLOG_CRITICAL << "Could not execute statement!\n";
+		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
+	}
 
 	//TODO: Fix memory leak
 }
 
-u64 db::Connection::ExecuteAndReturnID(PreparedStatement * ps)
+u64 Connection::ExecuteAndReturnID(PreparedStatement * ps)
 {
 	Execute(ps);
 	return mysql_stmt_insert_id(ps->statement_);
+}
+
+void Connection::ExecuteQuery(const std::string & sql)
+{
+	if (!mysql_) {
+		//throw exception
+		return;
+	}
+
+	if (mysql_query(mysql_, sql.c_str())) {
+		u32 error_num = mysql_errno(mysql_);
+
+	}
+}
+
+std::unique_ptr<Result> Connection::ReturnExecQuery(const std::string & sql)
+{
+	if (!mysql_) {
+		//throw exception
+		return nullptr;
+	}
+
+	if (!mysql_query(mysql_, sql.c_str())) {
+		MYSQL_RES* res = mysql_store_result(mysql_);
+		MYSQL_FIELD* fields = mysql_fetch_fields(res);
+		u64 rowCount = mysql_affected_rows(mysql_);
+		u32 fieldCount = mysql_field_count(mysql_);
+
+		return std::make_unique<Result>(res, fields, rowCount, fieldCount);
+	}
+
 }

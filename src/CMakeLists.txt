@@ -4,12 +4,15 @@ file(GLOB_RECURSE pb_root *.h *.hpp *.cpp *.c *.cc *.inl)
 file(GLOB_RECURSE pb_http http/*.h http/*.hpp http/*.cpp http/*.c http/*.cc http/*.inl)
 file(GLOB_RECURSE pb_common common/*.h common/*.hpp common/*.cpp common/*.c common/*.cc common/*.inl)
 file(GLOB_RECURSE pb_database db/*.h db/*.hpp db/*.cpp db/*.c db/*.cc db/*.inl)
+file(GLOB_RECURSE pb_models models/*.h models/*.hpp models/*.cpp models/*.c models/*.cc models/*.inl)
 
 source_group(http FILES ${pb_http})
 source_group(common FILES ${pb_common})
 source_group(db FILES ${pb_database})
+source_group(models FILES ${pb_models})
 
 set(pb_all
+        ${pb_models}
         ${pb_database}
         ${pb_http}
         ${pb_common}
