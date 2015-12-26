@@ -178,16 +178,21 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 	pod.set_itunes_explicit(returnBlankIfNull(channel->FirstChildElement("itunes:explicit")));
 	pod.set_copyright(returnBlankIfNull(channel->FirstChildElement("copyright")));
 	pod.set_itunes_image("test123");
-	//pod.Save();
+	
+	int podcastid = pod.SaveAndReturnID();
+
 
 	for (XMLElement* item = channel->FirstChildElement("item"); item != nullptr; item = item->NextSiblingElement("item")) {
-		std::cout << "Title: " << item->FirstChildElement("title")->GetText() << "\n";
-		std::cout << "Link: " << item->FirstChildElement("link")->GetText() << "\n";
-		std::cout << "pubDate: " << item->FirstChildElement("pubDate")->GetText() << "\n";
-		std::cout << "description: " << item->FirstChildElement("description")->GetText() << "\n";
-		//std::cout << "sub: " << item->FirstChildElement("itunes:subtitle")->GetText() << "\n";
-		//std::cout << "summary: " << item->FirstChildElement("itunes:summary")->GetText() << "\n";
-		//std::cout << "author: " << item->FirstChildElement("itunes:author")->GetText() << "\n";
+		auto ps = std::make_unique<db::PreparedStatement>();
+		ps->set_uint32(0, podcastid);
+
+		std::cout << "Title: " << returnBlankIfNull(item->FirstChildElement("title")) << "\n";
+		std::cout << "Link: " << returnBlankIfNull(item->FirstChildElement("link")) << "\n";
+		std::cout << "pubDate: " << returnBlankIfNull(item->FirstChildElement("pubDate"))<< "\n";
+		std::cout << "description: " << returnBlankIfNull(item->FirstChildElement("description")) << "\n";
+		std::cout << "sub: " << returnBlankIfNull(item->FirstChildElement("itunes:subtitle")) << "\n";
+		std::cout << "summary: " << returnBlankIfNull(item->FirstChildElement("itunes:summary")) << "\n";
+		std::cout << "author: " << returnBlankIfNull(item->FirstChildElement("itunes:author")) << "\n";
 		std::cout << "\n";
 	}
 
