@@ -156,6 +156,10 @@ std::string returnBlankIfNull(XMLElement* el) {
 	}
 }
 
+constexpr std::string returnBlankOrNull(XMLElement* el) {
+	return el->GetText() || "";
+}
+
 void Itunes::ParseRSS(const std::string& feedUrl) {
 	auto req = std::make_shared<Request>();
 	req->set_url(Url(feedUrl));
