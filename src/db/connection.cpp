@@ -21,6 +21,7 @@ Connection::Connection(ConnectionInfo && connInfo)
 
 db::Connection::~Connection()
 {
+	mysql_close(mysql_);
 }
 
 void Connection::Open()
@@ -55,9 +56,9 @@ void Connection::Execute()
 }
 
 
-enum_field_types CToMySQLType(TPreparedStatementDataTypeKey key)
+enum_field_types CToMySQLType(PreparedStatementType key)
 {
-	using pst = TPreparedStatementDataTypeKey;
+	using pst = PreparedStatementType;
 
 	switch (key) {
 	case pst::Uint8:

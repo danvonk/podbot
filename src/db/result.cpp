@@ -14,6 +14,12 @@ Result::Result(MYSQL_RES * result, MYSQL_FIELD * fields, u64 rowCount, u32 field
 	current_row_ = new Field[fieldCount];
 }
 
+Result::~Result()
+{
+	delete[] current_row_;
+	mysql_free_result(result_);
+}
+
 void Result::NextRow()
 {
 	MYSQL_ROW row = mysql_fetch_row(result_);

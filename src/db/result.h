@@ -8,6 +8,7 @@ class Result {
 public:
 	Result();
 	Result(MYSQL_RES* result, MYSQL_FIELD* fields, u64 rowCount, u32 fieldCount);
+	~Result();
 
 	void NextRow();
 

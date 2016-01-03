@@ -155,11 +155,6 @@ std::string returnBlankIfNull(XMLElement* el) {
 		return el->GetText();
 	}
 }
-
-constexpr std::string returnBlankOrNull(XMLElement* el) {
-	return el->GetText() || "";
-}
-
 void Itunes::ParseRSS(const std::string& feedUrl) {
 	auto req = std::make_shared<Request>();
 	req->set_url(Url(feedUrl));
@@ -187,8 +182,8 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 
 
 	for (XMLElement* item = channel->FirstChildElement("item"); item != nullptr; item = item->NextSiblingElement("item")) {
-		auto ps = std::make_unique<db::PreparedStatement>();
-		ps->set_uint32(0, podcastid);
+		//auto ps = std::make_unique<db::PreparedStatement>();
+		//ps->set_uint32(0, podcastid);
 
 		std::cout << "Title: " << returnBlankIfNull(item->FirstChildElement("title")) << "\n";
 		std::cout << "Link: " << returnBlankIfNull(item->FirstChildElement("link")) << "\n";

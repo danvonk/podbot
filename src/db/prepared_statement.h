@@ -3,11 +3,8 @@
 #include "common.h"
 #include <mysql.h>
 
+class DateTime;
 namespace db {
-	struct Memory {
-		void* data;
-		u32 size;
-	};
 
 	union TPreparedStatementDataTypes {
 		u8 _u8;
@@ -23,7 +20,7 @@ namespace db {
 		double _d;
 	};
 
-	enum class TPreparedStatementDataTypeKey {
+	enum class PreparedStatementType {
 		Uint8,
 		Uint16,
 		Uint32,
@@ -35,14 +32,16 @@ namespace db {
 		Float,
 		Double,
 		Null,
-		String
+		String,
+		DateTime
 	};
 
 	struct TPreparedStatementData
 	{
-		TPreparedStatementDataTypeKey type_name;
+		PreparedStatementType type_name;
 		TPreparedStatementDataTypes data;
 		std::vector<u8> string;
+		Memory memory;
 	};
 
 	class PreparedStatement {
@@ -51,8 +50,6 @@ namespace db {
 	public:
 		PreparedStatement(std::string&& query);
 		~PreparedStatement();
-
-		void BindBuffers(int paramCount);
 
 		void set_bool(const u8 index, const bool val);
 		void set_uint8(const u8 index, const u8 val);
@@ -70,7 +67,8 @@ namespace db {
 		
 		void set_string(const u8 index, const std::string& val);
 		void set_null(const u8 index);
-		void set_blob(const u8 index, const std::vector<u8>& val);
+		void set_blob(const u8 index, Memory* mem);
+		void set_date_time(const u8 index, DateTime* dt);
 
 
 		//Delete the assignment operators
@@ -78,7 +76,9 @@ namespace db {
 		PreparedStatement& operator=(PreparedStatement const& that) = delete;
 	private:
 		void FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param);
+		void BindBuffers(int paramCount);
 
+		MYSQL_TIME time_;
 		MYSQL_STMT* statement_;
 		MYSQL_BIND* bind_;
 		std::string query_;

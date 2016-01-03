@@ -7,7 +7,7 @@
 
 class Itunes {
 public:
-	Itunes(db::Connection&  conn);
+	Itunes(db::Connection& conn);
 	~Itunes();
 
 

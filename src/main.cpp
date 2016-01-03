@@ -16,9 +16,11 @@
 
 #include "http/url.hpp"
 #include "itunes.h"
+#include "common/date_time.h"
 
 
 #include <regex>
+#include <time.h>
 
 using namespace http;
 
@@ -44,25 +46,20 @@ int main(int argc, char* argv[]) {
 	auto conn = new db::Connection(cfgMgr.get());
 	conn->Open();
 
-	//auto results = conn->ReturnExecQuery("SELECT * FROM one WHERE id=1");
-	//results->NextRow();
-	//std::cout << "Id is " << (*results)[1].GetU32();
+	auto ps = std::make_unique<db::PreparedStatement>("INSERT INTO test(times) VALUES (?)");
+	
+	DateTime* dt = new DateTime();
+	dt->ParseRFC2822("Sun, 20 Dec 2015 10:45:38 +0000");
 
-	//Url url("https://danvonk.com?q=q1");
-	//std::cout << url.str() << "\n";
-	//std::cout << "Size of queries: " << url.query().size() << "\n";
-	//std::cout << url.query(0).val() << "\n";
-
-	Itunes it(*conn);
-	it.ParseRSS("http://frogpants.com/feed/");
+	std::cout << "Time is " << dt->Hour() << ":" << dt->Minute() << ":" << dt->Second();
+	ps->set_date_time(0, dt);
+	conn->Execute(ps.get());
 
 
 
-	//auto ps = new db::PreparedStatement("INSERT INTO one (sint, sstring, ssbool) VALUES (?,?,?)");
-	//ps->set_int32(0, 456);
-	//ps->set_string(1, "this is also a string");
-	//ps->set_bool(2, false);
 
-	//conn->Execute(ps);
+	delete dt;
+	/*Itunes it(*conn);
+	it.ParseRSS("http://frogpants.com/feed/");*/
 	return 0;
 }

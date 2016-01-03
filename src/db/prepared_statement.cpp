@@ -1,7 +1,8 @@
 #include "prepared_statement.h"
+#include "common/date_time.h"
 
 using namespace db;
-using pst = TPreparedStatementDataTypeKey;
+using pst = PreparedStatementType;
 
 PreparedStatement::PreparedStatement(std::string && query)
 	: statement_(nullptr)
@@ -13,7 +14,6 @@ PreparedStatement::PreparedStatement(std::string && query)
 PreparedStatement::~PreparedStatement()
 {
 	delete[] bind_;
-	delete statement_;
 }
 
 void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param)
@@ -21,7 +21,7 @@ void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param
 	param->buffer_length = 0;
 	param->is_null_value = 0;
 	param->is_null = 0;
-	param->length = nullptr;
+	param->length = 0;
 
 	switch (el.type_name)
 	{
@@ -89,6 +89,22 @@ void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param
 		memcpy(param->buffer, el.string.data(), len);
 		break;
 	}
+	case pst::DateTime:
+	{
+		DateTime* dt = static_cast<DateTime*>(el.memory.data);
+
+		time_.day = dt->Day();
+		time_.month = dt->Month();
+		time_.year = dt->Year();
+
+		time_.hour = dt->Hour();
+		time_.minute = dt->Minute();
+		time_.second = dt->Second();
+
+		param->buffer_type = MYSQL_TYPE_DATE;
+		param->buffer = &time_;
+		break;
+	}
 
 	case pst::Null:
 	default:
@@ -100,7 +116,6 @@ void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param
 
 void PreparedStatement::BindBuffers(int paramCount)
 {
-	using pst = TPreparedStatementDataTypeKey;
 	auto elements = stmt_binds_.size();
 
 	//initialise a MYSQL_BIND structure of the correct size.
@@ -127,7 +142,7 @@ void PreparedStatement::set_bool(const u8 index, const bool val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Uint8;
+	stmt_binds_[index].type_name = PreparedStatementType::Uint8;
 	if (val == true) {
 		stmt_binds_[index].data._u8 = 1;
 	}
@@ -143,7 +158,7 @@ void PreparedStatement::set_uint8(const u8 index, const u8 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Uint8;
+	stmt_binds_[index].type_name = PreparedStatementType::Uint8;
 	stmt_binds_[index].data._u8 = val;
 }
 
@@ -154,7 +169,7 @@ void PreparedStatement::set_uint16(const u8 index, const u16 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Uint16;
+	stmt_binds_[index].type_name = PreparedStatementType::Uint16;
 	stmt_binds_[index].data._u16 = val;
 }
 
@@ -165,7 +180,7 @@ void PreparedStatement::set_uint32(const u8 index, const u32 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Uint32;
+	stmt_binds_[index].type_name = PreparedStatementType::Uint32;
 	stmt_binds_[index].data._u32 = val;
 }
 
@@ -176,7 +191,7 @@ void PreparedStatement::set_uint64(const u8 index, const u64 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Uint64;
+	stmt_binds_[index].type_name = PreparedStatementType::Uint64;
 	stmt_binds_[index].data._u64 = val;
 }
 
@@ -187,7 +202,7 @@ void PreparedStatement::set_int8(const u8 index, const int32 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Int8;
+	stmt_binds_[index].type_name = PreparedStatementType::Int8;
 	stmt_binds_[index].data._i8 = val;
 }
 
@@ -198,7 +213,7 @@ void PreparedStatement::set_int16(const u8 index, const int16 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Int16;
+	stmt_binds_[index].type_name = PreparedStatementType::Int16;
 	stmt_binds_[index].data._i16 = val;
 }
 
@@ -209,7 +224,7 @@ void PreparedStatement::set_int32(const u8 index, const int32 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Int32;
+	stmt_binds_[index].type_name = PreparedStatementType::Int32;
 	stmt_binds_[index].data._i32 = val;
 }
 
@@ -220,7 +235,7 @@ void PreparedStatement::set_int64(const u8 index, const int64 val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Int64;
+	stmt_binds_[index].type_name = PreparedStatementType::Int64;
 	stmt_binds_[index].data._i64 = val;
 }
 
@@ -231,7 +246,7 @@ void PreparedStatement::set_float(const u8 index, const float val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Float;
+	stmt_binds_[index].type_name = PreparedStatementType::Float;
 	stmt_binds_[index].data._f = val;
 }
 
@@ -242,7 +257,7 @@ void PreparedStatement::set_double(const u8 index, const double val)
 		stmt_binds_.resize(index + 1);
 	}
 
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::Double;
+	stmt_binds_[index].type_name = PreparedStatementType::Double;
 	stmt_binds_[index].data._d = val;
 }
 
@@ -256,5 +271,26 @@ void PreparedStatement::set_string(const u8 index, const std::string & val)
 	//+1 for the null terminator
 	stmt_binds_[index].string.resize(val.size() + 1);
 	memcpy(stmt_binds_[index].string.data(), val.c_str(), val.size() + 1);
-	stmt_binds_[index].type_name = TPreparedStatementDataTypeKey::String;
+	stmt_binds_[index].type_name = PreparedStatementType::String;
+}
+
+void db::PreparedStatement::set_null(const u8 index)
+{
+}
+
+void PreparedStatement::set_blob(const u8 index, Memory * mem)
+{
+}
+
+void db::PreparedStatement::set_date_time(const u8 index, DateTime * dt)
+{
+	//resize the vector if needed
+	if (index >= stmt_binds_.size()) {
+		stmt_binds_.resize(index + 1);
+	}
+
+	stmt_binds_[index].type_name = PreparedStatementType::DateTime;
+	stmt_binds_[index].memory.data = static_cast<void*>(dt);
+	stmt_binds_[index].memory.size = sizeof(dt);
+
 }
