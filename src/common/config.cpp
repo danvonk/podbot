@@ -31,7 +31,7 @@ void ConfigMgr::ParseConfigFile(const std::string & path)
 			po::store(po::parse_config_file(ifs, desc_), vm_);
 			po::notify(vm_);
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception&) {
 			PBLOG_CRITICAL << "Could not parse config file. Check that it is in the correct location and that the syntax is valid.";
 		}
 	}
@@ -43,7 +43,7 @@ void ConfigMgr::ParseCommandLine(int argc, char * agrv[])
 		po::store(po::parse_command_line(argc, agrv, desc_), vm_);
 		po::notify(vm_);
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception&) {
 		PBLOG_CRITICAL << "Could not parse command line arguments. Check that the argument(s) supplied are valid.";
 	}
 }

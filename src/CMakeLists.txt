@@ -41,4 +41,7 @@ install(TARGETS podbot RUNTIME DESTINATION bin)
 
 if(WIN32)
         target_compile_definitions(podbot PRIVATE _WIN32_WINNT=0x0601)
+        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin )
+        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
+        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
 endif(WIN32)

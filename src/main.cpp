@@ -6,6 +6,7 @@
 #include <iterator>
 #include <cassert>
 
+#include "db/sql_exception.h"
 #include "common/log.h"
 #include "common/config.h"
 #include "db/connection.h"
@@ -44,21 +45,48 @@ int main(int argc, char* argv[]) {
 
 	mysql_library_init(0, nullptr, nullptr);
 	auto conn = new db::Connection(cfgMgr.get());
-	conn->Open();
-
-	auto ps = std::make_unique<db::PreparedStatement>("INSERT INTO test(times) VALUES (?)");
+	try {
+		conn->Open();
+	}
+	catch (const SQLException& e) {
+		PBLOG_CRITICAL << "Database connection error: " << e.what();
+		return EXIT_FAILURE;
+	}
 	
-	DateTime* dt = new DateTime();
-	dt->ParseRFC2822("Sun, 20 Dec 2015 10:45:38 +0000");
 
-	std::cout << "Time is " << dt->Hour() << ":" << dt->Minute() << ":" << dt->Second();
-	ps->set_date_time(0, dt);
-	conn->Execute(ps.get());
+	//auto ps = std::make_unique<db::PreparedStatement>("INSERT INTO test(times) VALUES (?)");
+	//
+	//DateTime* dt = new DateTime();
+	//dt->ParseRFC2822("Sun, 20 Dec 2015 21:12:16 +0000");
 
+	//std::cout << "Time is " << dt->Hour() << ":" << dt->Minute() << ":" << dt->Second();
+	//ps->set_date_time(0, dt);
+	//conn->Execute(ps.get());
 
+	MYSQL_TIME ts;
+	memset(&ts, 0, sizeof(ts));
+	ts.day = 20;
+	ts.month = 12;
+	ts.year = 2014;
+	ts.hour = 21;
+	ts.minute = 12;
+	ts.second = 38;
 
+	MYSQL_BIND bnd;
+	memset(&bnd, 0, sizeof(bnd));
+	MYSQL_STMT* stmt = mysql_stmt_init(conn->get_mysql());
+	const char* sql = "INSERT INTO test(times) VALUES (?)";
+	mysql_stmt_prepare(stmt, sql, strlen(sql));
 
-	delete dt;
+	bnd.buffer_type = MYSQL_TYPE_DATETIME;
+	bnd.buffer = &ts;
+	bnd.is_null = 0;
+	*bnd.length = sizeof(ts);
+
+	mysql_stmt_bind_param(stmt, &bnd);
+	mysql_stmt_execute(stmt);
+
+	//delete dt;
 	/*Itunes it(*conn);
 	it.ParseRSS("http://frogpants.com/feed/");*/
 	return 0;

@@ -1,4 +1,5 @@
 #pragma once
+#include "sql_exception.h"
 #include "common.h"
 #include "common/config.h"
 

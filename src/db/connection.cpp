@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "sql_exception.h"
 #include "prepared_statement.h"
 
 using namespace db;
@@ -24,25 +25,27 @@ db::Connection::~Connection()
 	mysql_close(mysql_);
 }
 
+//Connect to the database with the information supplied to the constructor
+//This will throw an SQLException if a connection cannot be made.
 void Connection::Open()
 {
-	mysql_ = mysql_init(nullptr);
-	if (!mysql_) {
-		PBLOG_CRITICAL << "Could not initialise MySQL connection";
+	MYSQL* pMysqlInit;
+	pMysqlInit = mysql_init(NULL);
+	if (!pMysqlInit) {
+		throw SQLException("Could not connected to MySQL database");
 	}
-	mysql_real_connect(mysql_, conn_info_.host.c_str(), conn_info_.user.c_str(),
+
+	mysql_ = mysql_real_connect(pMysqlInit, conn_info_.host.c_str(), conn_info_.user.c_str(),
 		conn_info_.password.c_str(), conn_info_.database.c_str(), conn_info_.port, nullptr, 0);
 
 	if (!mysql_) {
-		PBLOG_CRITICAL << "Could not connect to MySQL database at " << conn_info_.host;
-		PBLOG_CRITICAL << "MySQL error: " << mysql_error(mysql_);
-		mysql_close(mysql_);
-		//TODO: throw exception
-	}
-	else {
+		throw SQLException(mysql_error(pMysqlInit));
+		mysql_close(pMysqlInit);
+	} else {
+		PBLOG_INFO << "Successfully connected to MySQL db at: " << conn_info_.host;
 		PBLOG_INFO << "libmysqlclient: " << mysql_get_client_info();
 		PBLOG_INFO << "MySQL server version: " << mysql_get_server_info(mysql_);
-		PBLOG_INFO << "Connected to MySQL db at " << conn_info_.host;
+
 	}
 }
 
