@@ -7,7 +7,9 @@
 #include "common/rapidjson/rapidjson.h"
 #include "common/rapidjson/document.h"
 
+#include "db/prepared_statement.h"
 #include "models/podcast.h"
+#include "models/episode.h"
 
 
 using namespace http;
@@ -15,10 +17,10 @@ using namespace rapidjson;
 using namespace tinyxml2;
 
 
-Itunes::Itunes(db::Connection& conn) 
+Itunes::Itunes(boost::asio::io_service& io, db::Connection& conn)
 	: conn_(conn)
 {
-	client_ = std::make_unique<http_client>();
+	client_ = std::make_unique<http_client>(io);
 }
 
 Itunes::~Itunes() {
@@ -123,28 +125,16 @@ void Itunes::ParseFeed(const std::string& podcast) {
 	req->set_url(url);
 
 	auto res = client_->Req(req.get());
-
-	/*Document json;
-	json.Parse<0>(res->get_content().c_str());
-	std::cout << res->get_content();
-	
-	auto& val = json["resultCount"];
-
-	std::cout << "Got feed url " << val.GetString() << "\n";
-	std::cout << "results. " << val.GetString() << "\n";
-	ParseRSS(val.GetString());*/
-	std::cout << podcast << "\n";
-
 	std::string content = res->get_content();
-	std::cout << content;
-
 	Document doc;
 	doc.Parse(content.c_str());
 	assert(doc.IsObject());
 	std::cout << "result count : " << doc["resultCount"].GetInt() << "\n";
 	auto& results = doc["results"];
 
-	ParseRSS(results[0u]["feedUrl"].GetString());
+	if (doc["resultCount"].GetUint() == 1){
+		ParseRSS(results[0u]["feedUrl"].GetString());
+	}
 }
 
 std::string returnBlankIfNull(XMLElement* el) {
@@ -155,10 +145,39 @@ std::string returnBlankIfNull(XMLElement* el) {
 		return el->GetText();
 	}
 }
+
+std::vector<std::string>& split(const std::string& s, char delim, std::vector<std::string>& elms) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        if (!item.empty()) {
+            elms.push_back(item);
+        }
+    }
+    return elms;
+
+}
+
+u64 hmsToSeconds(const std::string& hms) {
+    if (!hms.empty()){
+        std::tm t;
+        std::istringstream iss(hms);
+        iss >> std::get_time(&t, "%H:%M:%S");
+        return (t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);
+    }
+    return 0;
+}
+
 void Itunes::ParseRSS(const std::string& feedUrl) {
 	auto req = std::make_shared<Request>();
 	req->set_url(Url(feedUrl));
-	auto res = client_->Req(req.get());
+    std::unique_ptr<Response> res;
+    try {
+        res = client_->Req(req.get());
+    } catch (const std::exception& e) {
+        PBLOG_ERROR << "HTTP Error: " << e.what();
+        return;
+    }
 
 	XMLDocument rssFeed;
 	rssFeed.Parse(res->get_content().c_str());
@@ -176,23 +195,35 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 	pod.set_itunes_author(returnBlankIfNull(channel->FirstChildElement("itunes:author")));
 	pod.set_itunes_explicit(returnBlankIfNull(channel->FirstChildElement("itunes:explicit")));
 	pod.set_copyright(returnBlankIfNull(channel->FirstChildElement("copyright")));
-	pod.set_itunes_image("test123");
-	
-	int podcastid = pod.SaveAndReturnID();
 
+    const char* itunesImage = channel->FirstChildElement("itunes:image")->Attribute("href");
+    if (itunesImage){
+        pod.set_itunes_image(itunesImage);
+    }
+
+    int podcastID = pod.SaveAndReturnID();
 
 	for (XMLElement* item = channel->FirstChildElement("item"); item != nullptr; item = item->NextSiblingElement("item")) {
-		//auto ps = std::make_unique<db::PreparedStatement>();
-		//ps->set_uint32(0, podcastid);
-
-		std::cout << "Title: " << returnBlankIfNull(item->FirstChildElement("title")) << "\n";
-		std::cout << "Link: " << returnBlankIfNull(item->FirstChildElement("link")) << "\n";
-		std::cout << "pubDate: " << returnBlankIfNull(item->FirstChildElement("pubDate"))<< "\n";
-		std::cout << "description: " << returnBlankIfNull(item->FirstChildElement("description")) << "\n";
-		std::cout << "sub: " << returnBlankIfNull(item->FirstChildElement("itunes:subtitle")) << "\n";
-		std::cout << "summary: " << returnBlankIfNull(item->FirstChildElement("itunes:summary")) << "\n";
-		std::cout << "author: " << returnBlankIfNull(item->FirstChildElement("itunes:author")) << "\n";
-		std::cout << "\n";
+		Episode ep(conn_);
+        ep.set_podcast_id(podcastID);
+        ep.set_title(returnBlankIfNull(item->FirstChildElement("title")));
+        ep.set_link(returnBlankIfNull(item->FirstChildElement("link")));
+        ep.get_pub_date()->ParseRFC2822(returnBlankIfNull(item->FirstChildElement("pubDate")));
+        ep.set_description(returnBlankIfNull(item->FirstChildElement("description")));
+        ep.set_itunes_subtitle(returnBlankIfNull(item->FirstChildElement("itunes:subtitle")));
+        ep.set_itunes_summary(returnBlankIfNull(item->FirstChildElement("itunes:summary")));
+        ep.set_itunes_author(returnBlankIfNull(item->FirstChildElement("itunes:author")));
+        ep.set_itunes_duration(hmsToSeconds(item->FirstChildElement("itunes:duration")->GetText()));
+        ep.set_guid(returnBlankIfNull(item->FirstChildElement("guid")));
+        ep.Save();
 	}
+
+    db::PreparedStatement indexedFeed("INSERT INTO indexed_feeds(podcast_id,feed_url,created_at,updated_at) VALUES (?,?,?,?)");
+    indexedFeed.set_uint32(0, podcastID);
+    indexedFeed.set_string(1, feedUrl);
+    indexedFeed.set_string(2, "now()");
+    indexedFeed.set_string(3, "now()");
+
+
 
 }

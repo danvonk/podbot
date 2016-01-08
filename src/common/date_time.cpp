@@ -1,9 +1,12 @@
 #include "date_time.h"
 
+using namespace boost::local_time;
+
 DateTime::DateTime()
-	: dt_(boost::local_time::local_sec_clock::local_time(boost::local_time::time_zone_ptr()))
+	: rfc2822_facet_("%a, %d %b %Y %H:%M:%S %q")
+	, dt_(local_sec_clock::local_time(boost::local_time::time_zone_ptr()))
 {
-	rfc2822_facet_ = new boost::local_time::local_time_input_facet("%a, %d %b %Y %H:%M:%S %q");
+
 }
 
 DateTime::~DateTime()
@@ -14,7 +17,7 @@ DateTime::~DateTime()
 void DateTime::ParseRFC2822(const std::string & ts)
 {
 	std::stringstream ss(ts);
-	ss.imbue(std::locale(std::locale::classic(), rfc2822_facet_));
+	ss.imbue(std::locale(std::locale::classic(), &rfc2822_facet_));
 	ss >> dt_;
 }
 

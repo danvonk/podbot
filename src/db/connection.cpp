@@ -130,12 +130,13 @@ void Connection::ExecuteQuery(const std::string & sql)
 {
 	if (!mysql_) {
 		//throw exception
+		throw SQLException("No valid MySQL context active.");
 		return;
 	}
 
 	if (mysql_query(mysql_, sql.c_str())) {
-		u32 error_num = mysql_errno(mysql_);
-
+//		u32 error_num = mysql_errno(mysql_);
+		throw SQLException(mysql_error(mysql_));
 	}
 }
 
@@ -153,6 +154,8 @@ std::unique_ptr<Result> Connection::ReturnExecQuery(const std::string & sql)
 		u32 fieldCount = mysql_field_count(mysql_);
 
 		return std::make_unique<Result>(res, fields, rowCount, fieldCount);
+	} else {
+		throw SQLException(mysql_error(mysql_));
 	}
 
 }

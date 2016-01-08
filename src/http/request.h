@@ -31,11 +31,10 @@ namespace http {
 		//void set_url(Url&& url);
 		void set_url(Url url);
 	private:
-		Url url_;
 		std::string user_agent_;
-		int retries_;
 		int connect_timeout_;
 		int read_timeout_;
-
+		int retries_;
+		Url url_;
 	};
 }

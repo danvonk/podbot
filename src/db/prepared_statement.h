@@ -6,7 +6,7 @@
 class DateTime;
 namespace db {
 
-	union TPreparedStatementDataTypes {
+	union PreparedStatementDataUnion {
 		u8 _u8;
 		u16 _u16;
 		u32 _u32;
@@ -39,7 +39,7 @@ namespace db {
 	struct TPreparedStatementData
 	{
 		PreparedStatementType type_name;
-		TPreparedStatementDataTypes data;
+		PreparedStatementDataUnion data;
 		std::vector<u8> string;
 		Memory memory;
 	};
@@ -57,7 +57,7 @@ namespace db {
 		void set_uint32(const u8 index, const u32 val);
 		void set_uint64(const u8 index, const u64 val);
 
-		void set_int8(const u8 index, const int32 val);
+		void set_int8(const u8 index, const int8 val);
 		void set_int16(const u8 index, const int16 val);
 		void set_int32(const u8 index, const int32 val);
 		void set_int64(const u8 index, const int64 val);

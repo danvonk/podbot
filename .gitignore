@@ -1,6 +1,7 @@
 .idea/
 bin/
 build/
+test/dep/googletest/build/
 res/log/
 *.log
 *.sdf

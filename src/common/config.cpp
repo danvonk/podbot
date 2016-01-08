@@ -12,10 +12,11 @@ ConfigMgr::ConfigMgr()
 		("help,h", "Display this help message")
 		("version,v", "Display the version number")
 		("db_user", po::value<std::string>()->default_value("root"), "Username for the database server")
-		("db_pass", po::value<std::string>()->default_value(""), "Password for the database server")
+		("db_pass", po::value<std::string>()->default_value("user"), "Password for the database server")
 		("db_name", po::value<std::string>()->default_value("dev"), "Name of the database")
 		("db_port", po::value<int>()->default_value(3306), "Port number for the database server")
-		("db_host", po::value<std::string>()->default_value("127.0.0.1"), "Hostname for the database server");
+		("db_host", po::value<std::string>()->default_value("127.0.0.1"), "Hostname for the database server")
+		("db_ping_time", po::value<int>()->default_value(30), "Duration between MySQL keep-alive pings");
 }
 
 
@@ -31,9 +32,12 @@ void ConfigMgr::ParseConfigFile(const std::string & path)
 			po::store(po::parse_config_file(ifs, desc_), vm_);
 			po::notify(vm_);
 		}
-		catch (const std::exception&) {
-			PBLOG_CRITICAL << "Could not parse config file. Check that it is in the correct location and that the syntax is valid.";
+		catch (const std::exception& e) {
+			PBLOG_CRITICAL << "Could not parse config file. Check that the syntax is valid.";
+			PBLOG_CRITICAL << e.what();
 		}
+	} else {
+		PBLOG_CRITICAL << "Could not parse config file. Check that it is in the correct location and that the syntax is valid.";
 	}
 }
 

@@ -13,21 +13,17 @@
 #include <map>
 
 
-namespace {
+namespace http {
 	enum class HeaderParserState {
 		HeaderStart,
 		HeaderKey,
 		HeaderValue,
 		HeadersComplete
 	};
-}
 
-
-namespace http {
 	class http_client {
 	public:
-		//http_client(const std::shared_ptr<spdlog::logger>& log);
-		http_client();
+		http_client(boost::asio::io_service& io);
 		std::unique_ptr<Response> Req(Request* req);
 
 	private:
@@ -53,7 +49,7 @@ namespace http {
 		//std::shared_ptr<spdlog::logger> logger_;
 		HeaderParserState hps_;
 
-		boost::asio::io_service service_;
+		boost::asio::io_service& service_;
 		boost::asio::ssl::context ssl_ctx_;
 		boost::asio::ip::tcp::resolver resolver_;
 		boost::asio::ip::tcp::socket socket_;

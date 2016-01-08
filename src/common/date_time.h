@@ -19,7 +19,7 @@ public:
 	unsigned int Minute();
 	unsigned int Second();
 private:
-	boost::local_time::local_time_input_facet* rfc2822_facet_;
+	boost::local_time::local_time_input_facet rfc2822_facet_;
 	boost::local_time::local_date_time dt_;
 
 };

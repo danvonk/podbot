@@ -1,6 +1,7 @@
 # src/ folder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-file(GLOB_RECURSE pb_root *.h *.hpp *.cpp *.c *.cc *.inl)
+#file(GLOB_RECURSE pb_root *.h *.hpp *.cpp *.c *.cc *.inl)
 file(GLOB_RECURSE pb_http http/*.h http/*.hpp http/*.cpp http/*.c http/*.cc http/*.inl)
 file(GLOB_RECURSE pb_common common/*.h common/*.hpp common/*.cpp common/*.c common/*.cc common/*.inl)
 file(GLOB_RECURSE pb_database db/*.h db/*.hpp db/*.cpp db/*.c db/*.cc db/*.inl)
@@ -17,7 +18,9 @@ set(pb_all
         ${pb_http}
         ${pb_common}
         ${pb_common_log}
-        ${pb_root}
+        common.h
+        itunes.cpp
+        itunes.h
 )
 
 include_directories(
@@ -28,20 +31,24 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/src
 )
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-add_executable(podbot ${pb_all})
+add_library(podbot STATIC ${pb_all})
 target_link_libraries(podbot
         ${Gumbo_LIBRARIES}
         ${MYSQL_LIBRARIES}
         ${Boost_LIBRARIES}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
+        pthread
 )
-install(TARGETS podbot RUNTIME DESTINATION bin)
+
+add_executable(runpodbot ${pb_all} main.cpp)
+target_link_libraries(runpodbot podbot)
+
+install(TARGETS runpodbot RUNTIME DESTINATION bin)
 
 if(WIN32)
-        target_compile_definitions(podbot PRIVATE _WIN32_WINNT=0x0601)
-        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin )
-        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
-        set_target_properties(podbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
+        target_compile_definitions(runpodbot PRIVATE _WIN32_WINNT=0x0601)
+        set_target_properties(runpodbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin )
+        set_target_properties(runpodbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
+        set_target_properties(runpodbot PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
 endif(WIN32)

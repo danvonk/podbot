@@ -47,7 +47,13 @@ public:
 
 	Log();
 	Log(Log const&);
-	Log(Log&& that) noexcept : impl(that.impl) { that.impl = nullptr; }
+	
+	Log(Log&& that) noexcept
+	: impl(that.impl)
+	{
+	that.impl = nullptr;
+	}
+
 	~Log();
 
 	Log& operator= (Log const&);
@@ -87,8 +93,6 @@ public:
 		static Logger instance;
 		return instance;
 	}
-
-	void InitLogging();
 
 	Log& getLogger() {
 		return logger_;

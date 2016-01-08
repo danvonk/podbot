@@ -39,15 +39,14 @@ Log::Log()
 		% expr::smessage);
 	logging::core::get()->add_sink(tsink);
 
-	//TODO: Re-enable file logging, the exceptions are being causes by a incorrect cast somewhere
-	//because of the logging wrapper.
+	//TODO: This has failed on Windows 7 before...
 
-	/*boost::shared_ptr<file_sink> fsink(new file_sink(
+	boost::shared_ptr<file_sink> fsink(new file_sink(
 		keywords::file_name = "%Y%m%d_pb.log",
 		keywords::rotation_size = 16384
 		));
 	fsink->locked_backend()->set_file_collector(sinks::file::make_collector(
-		keywords::target = "C:/dev/podbot_asio/res/log",
+		keywords::target = "../res/log",
 		keywords::max_size = 16 * 1024 * 1024,
 		keywords::min_free_space = 100 * 1024 * 1024
 		));
@@ -57,7 +56,7 @@ Log::Log()
 		% expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%d/%m/%Y %H:%M:%S")
 		% expr::attr<SeverityLevel>("Severity")
 		% expr::smessage);
-	logging::core::get()->add_sink(fsink);*/
+	logging::core::get()->add_sink(fsink);
 
 	logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
 	logging::core::get()->set_filter(expr::attr<SeverityLevel>("Severity").or_none() >= SeverityLevel::Debug);
@@ -116,8 +115,4 @@ boost::log::record Log::open_record(SeverityLevel sev)
 void Log::push_record(boost::log::record&& rec)
 {
 	impl->lg.push_record(std::move(rec));
-}
-
-void Logger::InitLogging()
-{
 }

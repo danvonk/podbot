@@ -14,17 +14,10 @@ public:
 
 	SQLException(int error_num, const std::string& state)
 		: runtime_error(state)
-		, error_no_(error_num)
 		, error_(state)
+		, error_no_(error_num)
+
 	{}
-
-
-	SQLException(const SQLException& e)
-		: std::runtime_error(e.what())
-		, error_(e.error_)
-		, error_no_(error_no_)
-	{
-	}
 
 protected:
 	const std::string error_;

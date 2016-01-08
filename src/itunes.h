@@ -7,7 +7,7 @@
 
 class Itunes {
 public:
-	Itunes(db::Connection& conn);
+	Itunes(boost::asio::io_service& io, db::Connection& conn);
 	~Itunes();
 
 
@@ -24,7 +24,6 @@ private:
 	std::vector<std::string> podcasts_; //the itunes url of each podcast
 
 	std::unique_ptr<http::http_client> client_;
-
 	db::Connection& conn_;
 
 };

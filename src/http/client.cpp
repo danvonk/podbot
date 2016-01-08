@@ -11,18 +11,17 @@ using asio::ip::tcp;
 http_parser_settings parser_settings_;
 
 
-//http_client::http_client(const std::shared_ptr<spdlog::logger>& log)
-http_client::http_client()
+http_client::http_client(asio::io_service& io)
 	//: logger_(log)
-	: hps_(HeaderParserState::HeaderStart)
+	: service_(io)
+	, hps_(HeaderParserState::HeaderStart)
 	, ssl_ctx_(asio::ssl::context::sslv23)
 	, resolver_(service_)
 	, socket_(service_)
 	, ssl_socket_(service_, ssl_ctx_)
 {
-	//logger_->info("logging from http client");
 	ssl_ctx_.set_default_verify_paths();
-	ssl_ctx_.load_verify_file("C:/dev/podbot_asio/res/cacert.pem");
+	ssl_ctx_.load_verify_file("../res/cacert.pem");
 
 	//http_parser_init(&parser_, HTTP_RESPONSE);
 
@@ -43,7 +42,6 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 	//initialise parser
 	res->parser_.data = this;
 	http_parser_init(&res->parser_, HTTP_RESPONSE);
-
 
 
 	response_ptr_ = res.get();
@@ -108,7 +106,6 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 
 		size_t bytes_parsed = http_parser_execute(&res->parser_, &parser_settings_, sstr.str().c_str(), strlen(sstr.str().c_str()));
 		res->set_status_code(res->parser_.status_code);
-		service_.run();
 
 		if (usingSSL) {
 			boost::system::error_code ec;

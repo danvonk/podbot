@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.3)
 project(podbot)
 
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fpermissive")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wpedantic")
+#set_property(TARGET podbot PROPERTY CXX_STANDARD 14)
 #set macro directory
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/macros")
 
@@ -17,3 +18,4 @@ find_package(Gumbo REQUIRED)
 find_package(MySQL REQUIRED)
 
 add_subdirectory(src)
+add_subdirectory(test)

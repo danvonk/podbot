@@ -23,8 +23,8 @@ public:
 	int SaveAndReturnID();
 
 private:
-	std::unique_ptr<db::PreparedStatement> stmt_;
 	db::Connection& conn_;
+	std::unique_ptr<db::PreparedStatement> stmt_;
 
 	std::string title_;
 	std::string link_;

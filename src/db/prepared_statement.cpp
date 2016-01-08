@@ -101,13 +101,12 @@ void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param
 		time_.minute = dt->Minute();
 		time_.second = dt->Second();
 
-		param->buffer_type = MYSQL_TYPE_DATE;
+		param->buffer_type = MYSQL_TYPE_DATETIME;
 		param->buffer = &time_;
 		break;
 	}
 
 	case pst::Null:
-	default:
 		param->buffer_type = MYSQL_TYPE_NULL;
 		param->is_null_value = true;
 		break;
@@ -128,7 +127,7 @@ void PreparedStatement::BindBuffers(int paramCount)
 
 	//zero the structure to prevent garbage values.
 	memset(bind_, 0, sizeof(bind_) * paramCount);
-	for (int i = 0; i < elements; ++i) {
+	for (unsigned int i = 0; i < elements; ++i) {
 		auto& el = stmt_binds_[i];
 		FillBuffer(el, &bind_[i]);
 	}
@@ -143,7 +142,7 @@ void PreparedStatement::set_bool(const u8 index, const bool val)
 	}
 
 	stmt_binds_[index].type_name = PreparedStatementType::Uint8;
-	if (val == true) {
+	if (val != 0) {
 		stmt_binds_[index].data._u8 = 1;
 	}
 	else {
@@ -195,7 +194,7 @@ void PreparedStatement::set_uint64(const u8 index, const u64 val)
 	stmt_binds_[index].data._u64 = val;
 }
 
-void PreparedStatement::set_int8(const u8 index, const int32 val)
+void PreparedStatement::set_int8(const u8 index, const int8 val)
 {
 	//resize the vector if needed
 	if (index >= stmt_binds_.size()) {
