@@ -76,12 +76,13 @@ namespace db {
 		PreparedStatement& operator=(PreparedStatement const& that) = delete;
 	private:
 		void FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param);
-		void BindBuffers(int paramCount);
+		void BindBuffers();
 
 		MYSQL_TIME time_;
 		MYSQL_STMT* statement_;
 		MYSQL_BIND* bind_;
 		std::string query_;
+		u32 param_count_;
 		int index_;
 
 		std::vector<TPreparedStatementData> stmt_binds_;

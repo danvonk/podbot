@@ -13,7 +13,38 @@ PreparedStatement::PreparedStatement(std::string && query)
 
 PreparedStatement::~PreparedStatement()
 {
-	delete[] bind_;
+	//TODO: memory leak.
+//	for (u32 i = 0; i < param_count_; ++i) {
+////		delete bind_[i].length;
+//		bind_[i].length = nullptr;
+//		if (bind_[i].buffer != nullptr){
+//			//memory leak
+//			delete[] bind_[i].buffer;
+//		}
+//		bind_[i].buffer = nullptr;
+//	}
+//	delete[] statement_->bind->length;
+//	delete[] statement_->bind->is_null;
+
+//	mysql_stmt_close(statement_);
+//	delete[] bind_;
+
+	if (statement_) {
+		mysql_stmt_close(statement_);
+	}
+
+	if (bind_) {
+		for (u32 i = 0; i < param_count_; ++i) {
+			if (bind_[i].buffer_type == MYSQL_TYPE_VAR_STRING) {
+				delete [] (char*) bind_[i].buffer;
+				delete bind_[i].length;
+			}
+
+			bind_[i].buffer = nullptr;
+			bind_[i].length = nullptr;
+		}
+		delete[] bind_;
+	}
 }
 
 void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param)
@@ -105,33 +136,26 @@ void PreparedStatement::FillBuffer(TPreparedStatementData& el, MYSQL_BIND* param
 		param->buffer = &time_;
 		break;
 	}
-
 	case pst::Null:
+		param->buffer = nullptr;
 		param->buffer_type = MYSQL_TYPE_NULL;
 		param->is_null_value = true;
 		break;
 	}
 }
 
-void PreparedStatement::BindBuffers(int paramCount)
+//TODO: Memory Leak
+void PreparedStatement::BindBuffers()
 {
-	auto elements = stmt_binds_.size();
-
+	param_count_ = mysql_stmt_param_count(statement_);
 	//initialise a MYSQL_BIND structure of the correct size.
-	if (elements != 1) {
-		bind_ = new MYSQL_BIND[elements - 1];
-	}
-	else {
-		bind_ = new MYSQL_BIND[1];
-	}
-
+	bind_ = new MYSQL_BIND[param_count_];
 	//zero the structure to prevent garbage values.
-	memset(bind_, 0, sizeof(bind_) * paramCount);
-	for (unsigned int i = 0; i < elements; ++i) {
+	memset(bind_, 0, sizeof(bind_) * param_count_);
+	for (unsigned int i = 0; i < param_count_; ++i) {
 		auto& el = stmt_binds_[i];
 		FillBuffer(el, &bind_[i]);
 	}
-
 }
 
 void PreparedStatement::set_bool(const u8 index, const bool val)

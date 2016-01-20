@@ -51,7 +51,6 @@ void Itunes::Categories() {
 	}
 
 	gumbo_destroy_output(&kGumboDefaultOptions, output);
-	Podcasts(categories_[0]);
 }
 
 void Itunes::search_for_links(GumboNode* node, std::vector<std::string>& container) {
@@ -102,24 +101,27 @@ void Itunes::Podcasts(const std::string& category) {
 			for (const auto& j : links) {
 				std::smatch matches;
 				if (std::regex_match(j, matches, exp)) {
-					found.push_back(matches[1].str());
-					ParseFeed(matches[1].str());
+//					found.push_back(matches[1].str());
+					ParseRSS(ResolveFeedUrl(matches[1].str()));
 				}
 			}
 			if (found.size() == 1 || found.size() == 0) {
 				break; //there are no more pages
 			}
 			//merge the vectors
-			podcasts_.insert(std::end(podcasts_), std::begin(found), std::end(found));
+//			podcasts_.insert(std::end(podcasts_), std::begin(found), std::end(found));
 			page++;
 		}
 		std::cout << "Finished parsing letter " << static_cast<char>(i + 65) << " with " << page - 1 << "pages.\n";
 	}
+	PBLOG_INFO << "Parsed Category: " << category;
 }
 
-void Itunes::ParseFeed(const std::string& podcast) {
+
+
+std::string Itunes::ResolveFeedUrl(const std::string& id) {
 	Url url("https://itunes.apple.com/lookup");
-	url.add_query("id", podcast);
+	url.add_query("id", id);
 
 	auto req = std::make_shared<Request>();
 	req->set_url(url);
@@ -128,13 +130,16 @@ void Itunes::ParseFeed(const std::string& podcast) {
 	std::string content = res->get_content();
 	Document doc;
 	doc.Parse(content.c_str());
-	assert(doc.IsObject());
-	std::cout << "result count : " << doc["resultCount"].GetInt() << "\n";
-	auto& results = doc["results"];
+	if (!doc.IsObject()) {
+		return "";
+	}
+
+	const auto& results = doc["results"];
 
 	if (doc["resultCount"].GetUint() == 1){
-		ParseRSS(results[0u]["feedUrl"].GetString());
+		return results[0u]["feedUrl"].GetString();
 	}
+	return "";
 }
 
 std::string returnBlankIfNull(XMLElement* el) {
@@ -142,7 +147,25 @@ std::string returnBlankIfNull(XMLElement* el) {
 		return "";
 	}
 	else {
-		return el->GetText();
+		if (el->GetText() && strlen(el->GetText()) != 0){
+			return el->GetText();
+		} else {
+			return std::string();
+		}
+	}
+}
+
+//like the above function, just for returning attribute values instead.
+std::string returnAttribute(XMLElement* el, const char* name) {
+	if (!el) {
+		return "";
+	}
+	else {
+		if (el->Attribute(name) != 0) {
+			return el->Attribute(name);
+		} else {
+			return std::string();
+		}
 	}
 }
 
@@ -160,15 +183,20 @@ std::vector<std::string>& split(const std::string& s, char delim, std::vector<st
 
 u64 hmsToSeconds(const std::string& hms) {
     if (!hms.empty()){
-        std::tm t;
-        std::istringstream iss(hms);
-        iss >> std::get_time(&t, "%H:%M:%S");
-        return (t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);
+		int h, m, s= 0;
+		if (sscanf(hms.data(), "%d:%d:%d", &h, &m, &s) >= 2)
+		{
+			return u64(h  * 3600 + m * 60 + s);
+		}
     }
     return 0;
 }
 
 void Itunes::ParseRSS(const std::string& feedUrl) {
+	if (feedUrl == "") {
+		return;
+	}
+
 	auto req = std::make_shared<Request>();
 	req->set_url(Url(feedUrl));
     std::unique_ptr<Response> res;
@@ -183,7 +211,13 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 	rssFeed.Parse(res->get_content().c_str());
 
 	XMLElement* rss = rssFeed.FirstChildElement("rss");
+	if (!rss) {
+		return;
+	}
 	XMLElement* channel = rss->FirstChildElement("channel");
+	if (!channel) {
+		return;
+	}
 
 	Podcast pod(conn_);
 
@@ -196,9 +230,11 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 	pod.set_itunes_explicit(returnBlankIfNull(channel->FirstChildElement("itunes:explicit")));
 	pod.set_copyright(returnBlankIfNull(channel->FirstChildElement("copyright")));
 
-    const char* itunesImage = channel->FirstChildElement("itunes:image")->Attribute("href");
+    XMLElement* itunesImage = channel->FirstChildElement("itunes:image");
     if (itunesImage){
-        pod.set_itunes_image(itunesImage);
+		if (itunesImage->Attribute("href")) {
+			pod.set_itunes_image(itunesImage->Attribute("href"));
+		}
     }
 
     int podcastID = pod.SaveAndReturnID();
@@ -206,24 +242,48 @@ void Itunes::ParseRSS(const std::string& feedUrl) {
 	for (XMLElement* item = channel->FirstChildElement("item"); item != nullptr; item = item->NextSiblingElement("item")) {
 		Episode ep(conn_);
         ep.set_podcast_id(podcastID);
+
+
         ep.set_title(returnBlankIfNull(item->FirstChildElement("title")));
         ep.set_link(returnBlankIfNull(item->FirstChildElement("link")));
         ep.get_pub_date()->ParseRFC2822(returnBlankIfNull(item->FirstChildElement("pubDate")));
         ep.set_description(returnBlankIfNull(item->FirstChildElement("description")));
         ep.set_itunes_subtitle(returnBlankIfNull(item->FirstChildElement("itunes:subtitle")));
-        ep.set_itunes_summary(returnBlankIfNull(item->FirstChildElement("itunes:summary")));
+
+		if (item->FirstChildElement("itunes:summary")) {
+			if (item->FirstChildElement("itunes:summary")->FirstChild()) {
+				ep.set_itunes_summary(item->FirstChildElement("itunes:summary")->FirstChild()->Value());
+			}
+		}
+
         ep.set_itunes_author(returnBlankIfNull(item->FirstChildElement("itunes:author")));
-        ep.set_itunes_duration(hmsToSeconds(item->FirstChildElement("itunes:duration")->GetText()));
+        ep.set_itunes_duration(hmsToSeconds(returnBlankIfNull(item->FirstChildElement("itunes:duration"))));
         ep.set_guid(returnBlankIfNull(item->FirstChildElement("guid")));
-        ep.Save();
+
+		XMLElement* enclosure = item->FirstChildElement("enclosure");
+		if (!enclosure) {
+			break;
+		}
+
+
+		ep.set_enclosure_url(returnAttribute(enclosure, "url"));
+		ep.set_enclosure_length(returnAttribute(enclosure, "length"));
+		ep.set_enclosure_type(returnAttribute(enclosure, "type"));
+
+		ep.Save();
 	}
 
-    db::PreparedStatement indexedFeed("INSERT INTO indexed_feeds(podcast_id,feed_url,created_at,updated_at) VALUES (?,?,?,?)");
-    indexedFeed.set_uint32(0, podcastID);
-    indexedFeed.set_string(1, feedUrl);
-    indexedFeed.set_string(2, "now()");
-    indexedFeed.set_string(3, "now()");
+    auto indexedFeed = std::make_unique<db::PreparedStatement>("INSERT INTO indexed_feeds(podcast_id,feed_url,created_at,updated_at) VALUES (?,?,?,?)");
+    indexedFeed->set_uint32(0, podcastID);
+    indexedFeed->set_string(1, feedUrl);
+    indexedFeed->set_string(2, "now()");
+    indexedFeed->set_string(3, "now()");
+	conn_.Execute(indexedFeed.get());
 
+}
 
-
+void Itunes::ParseAllCategories() {
+	for (const auto& cat : categories_) {
+		Podcasts(cat);
+	}
 }

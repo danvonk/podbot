@@ -32,15 +32,17 @@ void Connection::Open()
 	MYSQL* pMysqlInit;
 	pMysqlInit = mysql_init(NULL);
 	if (!pMysqlInit) {
-		throw SQLException("Could not connected to MySQL database");
+		throw SQLException("Could not connect to MySQL database");
 	}
 
 	mysql_ = mysql_real_connect(pMysqlInit, conn_info_.host.c_str(), conn_info_.user.c_str(),
 		conn_info_.password.c_str(), conn_info_.database.c_str(), conn_info_.port, nullptr, 0);
 
 	if (!mysql_) {
-		throw SQLException(mysql_error(pMysqlInit));
+		const char* error = mysql_error(pMysqlInit);
 		mysql_close(pMysqlInit);
+		throw SQLException(error);
+
 	} else {
 		PBLOG_INFO << "Successfully connected to MySQL db at: " << conn_info_.host;
 		PBLOG_INFO << "libmysqlclient: " << mysql_get_client_info();
@@ -97,26 +99,13 @@ enum_field_types CToMySQLType(PreparedStatementType key)
 
 void Connection::Execute(PreparedStatement * ps)
 {
-	ps->statement_ = mysql_stmt_init(mysql_);
-	if (!ps->statement_) {
-		PBLOG_CRITICAL << "Could not execute statement!\n";
-		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
-	}
-	const char* sql = ps->query_.c_str();
-
-	if (mysql_stmt_prepare(ps->statement_, sql, strlen(sql))) {
-		PBLOG_CRITICAL << "Could not execute statement!\n";
-		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
-	}
-
-	ps->BindBuffers(mysql_stmt_param_count(ps->statement_));
-
+	InitialisePrepStatement(ps->query_, ps);
+	ps->BindBuffers();
 	mysql_stmt_bind_param(ps->statement_, ps->bind_);
 	if (mysql_stmt_execute(ps->statement_) != 0) {
 		PBLOG_CRITICAL << "Could not execute statement!\n";
 		PBLOG_CRITICAL << mysql_stmt_error(ps->statement_);
 	}
-
 	//TODO: Fix memory leak
 }
 
@@ -133,7 +122,6 @@ void Connection::ExecuteQuery(const std::string & sql)
 		throw SQLException("No valid MySQL context active.");
 		return;
 	}
-
 	if (mysql_query(mysql_, sql.c_str())) {
 //		u32 error_num = mysql_errno(mysql_);
 		throw SQLException(mysql_error(mysql_));
@@ -158,4 +146,18 @@ std::unique_ptr<Result> Connection::ReturnExecQuery(const std::string & sql)
 		throw SQLException(mysql_error(mysql_));
 	}
 
+}
+
+void Connection::InitialisePrepStatement(const std::string &sql, PreparedStatement *ps) {
+	ps->statement_ = mysql_stmt_init(mysql_);
+	if (!ps->statement_) {
+		PBLOG_CRITICAL << "Could not create statement. " << mysql_error(mysql_);
+		PBLOG_CRITICAL << "SQL was: " << sql;
+	} else {
+		if (mysql_stmt_prepare(ps->statement_, sql.c_str(), strlen(sql.c_str()))) {
+			PBLOG_CRITICAL << "Could not prepare statement. " << mysql_stmt_error(ps->statement_);
+			PBLOG_CRITICAL << "SQL was " << sql;
+			mysql_stmt_close(ps->statement_);
+		}
+	}
 }

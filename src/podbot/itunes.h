@@ -13,10 +13,12 @@ public:
 
 	//fill the categories vector with the url of each category
 	void Categories();
+	void ParseAllCategories();
 	//fill the podcasts vector with the url of each podcast from a specified category
 	void Podcasts(const std::string& category);
-	void ParseFeed(const std::string& podcast);
 	void ParseRSS(const std::string& feedUrl);
+
+	std::string ResolveFeedUrl(const std::string& id);
 private:
 	void search_for_links(GumboNode* node, std::vector<std::string>& container);
 

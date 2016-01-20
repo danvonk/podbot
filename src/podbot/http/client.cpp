@@ -66,8 +66,12 @@ std::unique_ptr<Response> http_client::Req(Request* req)
 
 			ssl_socket_.set_verify_mode(asio::ssl::verify_peer);
 			ssl_socket_.set_verify_callback(boost::bind(&http_client::verify_certificate, this, _1, _2));
-			ssl_socket_.handshake(asio::ssl::stream_base::client);
 
+			try {
+				ssl_socket_.handshake(asio::ssl::stream_base::client);
+			} catch (const std::exception& e) {
+				return res;
+			}
 			asio::write(ssl_socket_, request_);
 
 			//read until eof

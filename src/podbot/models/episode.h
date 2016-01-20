@@ -35,7 +35,7 @@ public:
     }
 
     void set_link(const std::string &link) {
-        link_ = link_;
+        link_ = link;
     }
 
     const std::string &get_description() const {

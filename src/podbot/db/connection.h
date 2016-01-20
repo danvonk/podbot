@@ -4,6 +4,7 @@
 #include "common/config.h"
 
 #include "result.h"
+#include "prepared_statement.h"
 #include <mysql.h>
 
 namespace db {
@@ -27,6 +28,7 @@ namespace db {
 		void Ping();
 		void Execute();
 
+		void InitialisePrepStatement(const std::string& sql, PreparedStatement* ps);
 		void Execute(PreparedStatement* ps);
 		u64 ExecuteAndReturnID(PreparedStatement* ps);
 
