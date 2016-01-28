@@ -69,6 +69,10 @@ namespace db {
 		void set_null(const u8 index);
 		void set_blob(const u8 index, Memory* mem);
 		void set_date_time(const u8 index, DateTime* dt);
+		
+		bool is_bound() {
+		  return is_bound_;
+		}
 
 
 		//Delete the assignment operators
@@ -84,6 +88,7 @@ namespace db {
 		std::string query_;
 		u32 param_count_;
 		int index_;
+		bool is_bound_;
 
 		std::vector<TPreparedStatementData> stmt_binds_;
 	};

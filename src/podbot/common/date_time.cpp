@@ -53,3 +53,8 @@ unsigned int DateTime::Second()
 {
 	return tm_.tm_sec;
 }
+
+void DateTime::Clear()
+{
+  memset(&tm_, 0, sizeof(tm_));
+}

@@ -10,6 +10,7 @@ public:
 	~DateTime();
 
 	void ParseRFC2822(const std::string& ts);
+	void Clear();
 	
 	unsigned int Day();
 	unsigned int Month();

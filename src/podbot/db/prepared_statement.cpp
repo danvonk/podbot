@@ -8,31 +8,12 @@ PreparedStatement::PreparedStatement(std::string && query)
 	: statement_(nullptr)
 	, bind_(nullptr)
 	, query_(std::move(query))
+	, is_bound_(false)
 {
 }
 
 PreparedStatement::~PreparedStatement()
 {
-	//TODO: memory leak.
-//	for (u32 i = 0; i < param_count_; ++i) {
-////		delete bind_[i].length;
-//		bind_[i].length = nullptr;
-//		if (bind_[i].buffer != nullptr){
-//			//memory leak
-//			delete[] bind_[i].buffer;
-//		}
-//		bind_[i].buffer = nullptr;
-//	}
-//	delete[] statement_->bind->length;
-//	delete[] statement_->bind->is_null;
-
-//	mysql_stmt_close(statement_);
-//	delete[] bind_;
-
-	if (statement_) {
-		mysql_stmt_close(statement_);
-	}
-
 	if (bind_) {
 		for (u32 i = 0; i < param_count_; ++i) {
 			if (bind_[i].buffer_type == MYSQL_TYPE_VAR_STRING) {
@@ -44,6 +25,9 @@ PreparedStatement::~PreparedStatement()
 			bind_[i].length = nullptr;
 		}
 		delete[] bind_;
+	}
+	if (is_bound()) {
+	  mysql_stmt_close(statement_);
 	}
 }
 
@@ -315,5 +299,4 @@ void db::PreparedStatement::set_date_time(const u8 index, DateTime * dt)
 	stmt_binds_[index].type_name = PreparedStatementType::DateTime;
 	stmt_binds_[index].memory.data = static_cast<void*>(dt);
 	stmt_binds_[index].memory.size = sizeof(dt);
-
 }

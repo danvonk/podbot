@@ -12,7 +12,7 @@
 
 class Url {
 public:
-    // Exception thut may be thrown when decoding an URL or an assigning value
+    // Exception that may be thrown when decoding an URL or an assigning value
     class parse_error: public std::invalid_argument {
     public:
         parse_error(const std::string &reason) : std::invalid_argument(reason) {}

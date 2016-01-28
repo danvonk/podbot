@@ -5,7 +5,7 @@ using namespace db;
 
 Podcast::Podcast(Connection& conn)
 	: conn_(conn)
-	, stmt_(new db::PreparedStatement(PODCAST_CREATE_STMT))
+	, stmt_(PODCAST_CREATE_STMT)
 {
 }
 
@@ -60,34 +60,34 @@ void Podcast::set_itunes_image(const std::string & image)
 
 void Podcast::Save()
 {
-	stmt_->set_string(0, title_);
-	stmt_->set_string(1, link_);
-	stmt_->set_string(2, description_);
-	stmt_->set_string(3, language_);
-	stmt_->set_string(4, category_);
-	stmt_->set_string(5, itunes_author_);
-	stmt_->set_string(6, itunes_explicit_);
-	stmt_->set_string(7, copyright_);
-	stmt_->set_string(8, itunes_image_);
-	stmt_->set_string(9, "now()");
-	stmt_->set_string(10, "now()");
+	stmt_.set_string(0, title_);
+	stmt_.set_string(1, link_);
+	stmt_.set_string(2, description_);
+	stmt_.set_string(3, language_);
+	stmt_.set_string(4, category_);
+	stmt_.set_string(5, itunes_author_);
+	stmt_.set_string(6, itunes_explicit_);
+	stmt_.set_string(7, copyright_);
+	stmt_.set_string(8, itunes_image_);
+	stmt_.set_string(9, "now()");
+	stmt_.set_string(10, "now()");
 
-	conn_.Execute(stmt_.get());
+	conn_.ExecuteStatement(&stmt_);
 }
 
 int Podcast::SaveAndReturnID()
 {
-	stmt_->set_string(0, title_);
-	stmt_->set_string(1, link_);
-	stmt_->set_string(2, description_);
-	stmt_->set_string(3, language_);
-	stmt_->set_string(4, category_);
-	stmt_->set_string(5, itunes_author_);
-	stmt_->set_string(6, itunes_explicit_);
-	stmt_->set_string(7, copyright_);
-	stmt_->set_string(8, itunes_image_);
-	stmt_->set_string(9, "now()");
-	stmt_->set_string(10, "now()");
+	stmt_.set_string(0, title_);
+	stmt_.set_string(1, link_);
+	stmt_.set_string(2, description_);
+	stmt_.set_string(3, language_);
+	stmt_.set_string(4, category_);
+	stmt_.set_string(5, itunes_author_);
+	stmt_.set_string(6, itunes_explicit_);
+	stmt_.set_string(7, copyright_);
+	stmt_.set_string(8, itunes_image_);
+	stmt_.set_string(9, "now()");
+	stmt_.set_string(10, "now()");
 
-	return conn_.ExecuteAndReturnID(stmt_.get());
+	return conn_.ExecuteStatementAndReturnID(&stmt_);
 }

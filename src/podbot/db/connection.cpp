@@ -47,7 +47,6 @@ void Connection::Open()
 		PBLOG_INFO << "Successfully connected to MySQL db at: " << conn_info_.host;
 		PBLOG_INFO << "libmysqlclient: " << mysql_get_client_info();
 		PBLOG_INFO << "MySQL server version: " << mysql_get_server_info(mysql_);
-
 	}
 }
 
@@ -97,9 +96,14 @@ enum_field_types CToMySQLType(PreparedStatementType key)
 	}
 }
 
-void Connection::Execute(PreparedStatement * ps)
+void Connection::ExecuteStatement(PreparedStatement* ps)
 {
-	InitialisePrepStatement(ps->query_, ps);
+	//use mysql_stmt_prepare on first run.
+	if (!ps->is_bound()) {
+	  initialise_prep_statement(ps->query_, ps);
+	  ps->is_bound_ = true;
+	}
+	
 	ps->BindBuffers();
 	mysql_stmt_bind_param(ps->statement_, ps->bind_);
 	if (mysql_stmt_execute(ps->statement_) != 0) {
@@ -109,9 +113,9 @@ void Connection::Execute(PreparedStatement * ps)
 	//TODO: Fix memory leak
 }
 
-u64 Connection::ExecuteAndReturnID(PreparedStatement * ps)
+u64 Connection::ExecuteStatementAndReturnID(PreparedStatement* ps)
 {
-	Execute(ps);
+	ExecuteStatement(ps);
 	return mysql_stmt_insert_id(ps->statement_);
 }
 
@@ -134,7 +138,6 @@ std::unique_ptr<Result> Connection::ReturnExecQuery(const std::string & sql)
 		//throw exception
 		return nullptr;
 	}
-
 	if (!mysql_query(mysql_, sql.c_str())) {
 		MYSQL_RES* res = mysql_store_result(mysql_);
 		MYSQL_FIELD* fields = mysql_fetch_fields(res);
@@ -148,7 +151,7 @@ std::unique_ptr<Result> Connection::ReturnExecQuery(const std::string & sql)
 
 }
 
-void Connection::InitialisePrepStatement(const std::string &sql, PreparedStatement *ps) {
+void Connection::initialise_prep_statement(const std::string &sql, PreparedStatement *ps) {
 	ps->statement_ = mysql_stmt_init(mysql_);
 	if (!ps->statement_) {
 		PBLOG_CRITICAL << "Could not create statement. " << mysql_error(mysql_);

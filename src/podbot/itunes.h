@@ -4,12 +4,12 @@
 #include <gumbo.h>
 
 #include "models/podcast.h"
+#include <regex>
 
 class Itunes {
 public:
 	Itunes(boost::asio::io_service& io, db::Connection& conn);
 	~Itunes();
-
 
 	//fill the categories vector with the url of each category
 	void Categories();
@@ -22,10 +22,12 @@ public:
 private:
 	void search_for_links(GumboNode* node, std::vector<std::string>& container);
 
+	db::Connection& conn_;
+	std::unique_ptr<http::http_client> client_;
+	std::regex exp_; //the podcast capture regexp
+	
 	std::vector<std::string> categories_;
 	std::vector<std::string> podcasts_; //the itunes url of each podcast
 
-	std::unique_ptr<http::http_client> client_;
-	db::Connection& conn_;
 
 };

@@ -6,3 +6,5 @@ lib/
 res/log/
 *.log
 *.sdf
+.kdev4/
+*.kdev4

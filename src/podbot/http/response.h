@@ -18,7 +18,6 @@ namespace http {
 		const std::string get_content() const;
 		void add_header(std::string&& key, std::string&& val);
 	private:
-		http_parser parser_;
 		std::map<std::string, std::string> headers_;
 		int status_code_;
 		std::string content_;

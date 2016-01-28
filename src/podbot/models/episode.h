@@ -129,10 +129,12 @@ public:
     DateTime* get_pub_date(){
         return &pub_date_;
     }
+    
+    void Clear();
 
 private:
     db::Connection& conn_;
-    std::unique_ptr<db::PreparedStatement> stmt_;
+    db::PreparedStatement stmt_;
 
     std::string title_;
     int podcast_id_;

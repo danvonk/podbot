@@ -24,7 +24,7 @@ namespace http {
 	class http_client {
 	public:
 		http_client(boost::asio::io_service& io);
-		std::unique_ptr<Response> Req(Request* req);
+		Response Req(Request* req);
 
 	private:
 		bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx);

@@ -14,12 +14,12 @@ HTTPTest::~HTTPTest() {
 }
 
 TEST_F(HTTPTest, HTTPSGetRequest) {
-    auto req = std::make_unique<Request>();
-    req->set_url(Url("https://danvonk.com"));
-    auto res = cl_.Req(req.get());
+    Request req;
+    req.set_url(Url("https://danvonk.com"));
+    auto res = cl_.Req(&req);
 
-    EXPECT_EQ(200, res->get_status_code());
-    EXPECT_EQ(false, res->get_content().empty());
+    EXPECT_EQ(200, res.get_status_code());
+    EXPECT_EQ(false, res.get_content().empty());
 }
 
 TEST_F(HTTPTest, ItunesPageIteration) {

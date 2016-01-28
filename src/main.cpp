@@ -9,19 +9,17 @@
 #include "db/prepared_statement.h"
 #include "common/date_time.h"
 
-
 #include "itunes.h"
 
 using namespace http;
 
-db::Connection *conn;
-boost::asio::deadline_timer *mysqlTimer;
+db::Connection* conn;
+boost::asio::deadline_timer* mysqlTimer;
 
 void keep_mysql_alive(const boost::system::error_code &err) {
     if (!err) {
         PBLOG_INFO << "Pinging MySQL";
         conn->Ping();
-
     }
 }
 
@@ -48,7 +46,6 @@ int main(int argc, char *argv[]) {
     mysqlTimer->expires_from_now(boost::posix_time::minutes(cfgMgr->GetValue<int>("db_ping_time", 30)));
     mysqlTimer->async_wait(keep_mysql_alive);
 
-    mysql_library_init(0, nullptr, nullptr);
     conn = new db::Connection(cfgMgr.get());
     try {
         conn->Open();

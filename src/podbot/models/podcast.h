@@ -24,7 +24,7 @@ public:
 
 private:
 	db::Connection& conn_;
-	std::unique_ptr<db::PreparedStatement> stmt_;
+	db::PreparedStatement stmt_;
 
 	std::string title_;
 	std::string link_;

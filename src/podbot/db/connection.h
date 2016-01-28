@@ -26,11 +26,10 @@ namespace db {
 
 		void Open();
 		void Ping();
+		
 		void Execute();
-
-		void InitialisePrepStatement(const std::string& sql, PreparedStatement* ps);
-		void Execute(PreparedStatement* ps);
-		u64 ExecuteAndReturnID(PreparedStatement* ps);
+		void ExecuteStatement(PreparedStatement* ps);
+		u64 ExecuteStatementAndReturnID(PreparedStatement* ps);
 
 		void ExecuteQuery(const std::string& sql);
 		std::unique_ptr<Result> ReturnExecQuery(const std::string& sql);
@@ -43,6 +42,7 @@ namespace db {
 		Connection(Connection const& right) = delete;
 		Connection& operator=(Connection const& right) = delete;
 	private:
+		void initialise_prep_statement(const std::string& sql, PreparedStatement* ps);
 		MYSQL* mysql_;
 		ConnectionInfo conn_info_;
 	};
