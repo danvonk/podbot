@@ -1,7 +1,6 @@
 #pragma once
 #include "common.h"
 #include "http/client.h"
-#include <gumbo.h>
 
 #include "models/podcast.h"
 #include <regex>
@@ -20,7 +19,7 @@ public:
 
 	std::string ResolveFeedUrl(const std::string& id);
 private:
-	void search_for_links(GumboNode* node, std::vector<std::string>& container);
+	//void search_for_links(GumboNode* node, std::vector<std::string>& container);
 
 	db::Connection& conn_;
 	std::unique_ptr<http::http_client> client_;

@@ -30,6 +30,8 @@ http_client::http_client(asio::io_service &io)
 Response http_client::Req(Request *req) {
     bool usingSSL = false;
     Response res;
+	res.status_code_ = 0;
+	res.content_ = "";
 
     http_parser parser;
     //initialise parser
@@ -53,7 +55,14 @@ Response http_client::Req(Request *req) {
     std::ostringstream sstr;
 
     if (usingSSL) {
-        asio::connect(ssl_socket_.lowest_layer(), resolver_.resolve(query));
+		try {
+			asio::connect(ssl_socket_.lowest_layer(), resolver_.resolve(query));
+		}
+		catch (const boost::system::system_error& e) {
+			PBLOG_INFO << "HTTP Error: " << e.what();
+			return res;
+		}
+        
         ssl_socket_.lowest_layer().set_option(tcp::no_delay(true));
         ssl_socket_.set_verify_mode(asio::ssl::verify_peer);
         //ssl_socket_.set_verify_callback(boost::bind(&http_client::verify_certificate, this, _1, _2));
@@ -76,7 +85,7 @@ Response http_client::Req(Request *req) {
             }
         }
         else {
-            throw boost::system::system_error(error);
+			return res;
         }
     }
     else {
@@ -94,7 +103,7 @@ Response http_client::Req(Request *req) {
             }
         }
         else {
-            throw boost::system::system_error(error);
+			return res;
         }
 
     }

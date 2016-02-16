@@ -13,7 +13,7 @@ include_directories(
         ${Boost_INCLUDE_DIRS}
         ${Gumbo_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/src/podbot
-)
+        )
 
 set(pb_all
         ${pb_models}
@@ -35,5 +35,8 @@ target_link_libraries(podbot
         ${Boost_LIBRARIES}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
-        pthread
-)
+        )
+
+if (LINUX)
+       target_link_libraries(podbot pthread)
+endif(LINUX)

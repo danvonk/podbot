@@ -3,7 +3,6 @@
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/common.hpp>
 
-
 // Here we define our application severity levels.
 enum class SeverityLevel
 {

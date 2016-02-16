@@ -1,4 +1,5 @@
 #include "itunes.h"
+#include <gumbo.h>
 
 #include "common/tinyxml2.h"
 #include "common/rapidjson/rapidjson.h"
@@ -9,6 +10,21 @@
 using namespace http;
 using namespace rapidjson;
 using namespace tinyxml2;
+
+void search_for_links(GumboNode* node, std::vector<std::string>& container) {
+	if (node->type != GUMBO_NODE_ELEMENT) {
+		return;
+	}
+	GumboAttribute* href;
+	if (node->v.element.tag == GUMBO_TAG_A) {
+		href = gumbo_get_attribute(&node->v.element.attributes, "href");
+		container.push_back(href->value);
+	}
+	GumboVector* children = &node->v.element.children;
+	for (u32 i = 0; i < children->length; ++i) {
+		search_for_links(static_cast<GumboNode*>(children->data[i]), container);
+	}
+}
 
 Itunes::Itunes(boost::asio::io_service& io, db::Connection& conn)
   : conn_(conn)
@@ -45,20 +61,7 @@ void Itunes::Categories() {
 	gumbo_destroy_output(&kGumboDefaultOptions, output);
 }
 
-void Itunes::search_for_links(GumboNode* node, std::vector<std::string>& container) {
-	if (node->type != GUMBO_NODE_ELEMENT) {
-		return;
-	}
-	GumboAttribute* href;
-	if (node->v.element.tag == GUMBO_TAG_A) {
-		href = gumbo_get_attribute(&node->v.element.attributes, "href");
-		container.push_back(href->value);
-	}
-	GumboVector* children = &node->v.element.children;
-	for (u32 i = 0; i < children->length; ++i) {
-		search_for_links(static_cast<GumboNode*>(children->data[i]), container);
-	}
-}
+
 
 void Itunes::Podcasts(const std::string& category) {
 	for (int i = 0; i < 27; ++i) {
@@ -97,7 +100,7 @@ void Itunes::Podcasts(const std::string& category) {
 					foundSize += 1;
 				}
 			}
-			if (foundSize == 1 || foundSize == 0) {
+			if (foundSize < 2) {
 				break; //there are no more pages
 			}
 			//merge the vectors
@@ -119,9 +122,16 @@ std::string Itunes::ResolveFeedUrl(const std::string& id) {
 	req.set_url(url);
 
 	auto res = client_->Req(&req);
+
+	if (res.get_status_code() != 200) {
+		PBLOG_DEBUG << "Resolver was supplied invalid feed url or the HTTP request could not be completed.";
+		return "";
+	}
+
 	Document doc;
 	doc.Parse(res.get_content().c_str());
 	if (!doc.IsObject()) {
+		PBLOG_DEBUG << "Resolver could not read JSON Response.";
 		return "";
 	}
 
