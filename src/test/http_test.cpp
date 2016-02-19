@@ -16,10 +16,10 @@ HTTPTest::~HTTPTest() {
 TEST_F(HTTPTest, HTTPSGetRequest) {
     Request req;
     req.set_url(Url("https://danvonk.com"));
-    auto res = cl_.Req(&req);
+    auto res = cl_.make_request(&req);
 
-    EXPECT_EQ(200, res.get_status_code());
-    EXPECT_EQ(false, res.get_content().empty());
+    EXPECT_EQ(200, res.status_code_);
+    EXPECT_EQ(false, res.content_.empty());
 }
 
 TEST_F(HTTPTest, ItunesPageIteration) {

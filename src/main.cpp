@@ -18,7 +18,7 @@ boost::asio::deadline_timer* mysqlTimer;
 
 void keep_mysql_alive(const boost::system::error_code &err) {
     if (!err) {
-        PBLOG_INFO << "Pinging MySQL";
+        PBLOG_INFO << "Pinging MySQL.";
         conn->Ping();
     }
 }

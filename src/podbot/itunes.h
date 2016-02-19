@@ -1,10 +1,12 @@
 #pragma once
+
 #include "common.h"
 #include "http/client.h"
+#include "db/connection.h"
 
-#include "models/podcast.h"
 #include <regex>
 
+class RssParser;
 class Itunes {
 public:
 	Itunes(boost::asio::io_service& io, db::Connection& conn);
@@ -22,8 +24,9 @@ private:
 	//void search_for_links(GumboNode* node, std::vector<std::string>& container);
 
 	db::Connection& conn_;
-	std::unique_ptr<http::http_client> client_;
+	std::unique_ptr<http::HttpClient> client_;
 	std::regex exp_; //the podcast capture regexp
+	std::unique_ptr<RssParser> rss_;
 	
 	std::vector<std::string> categories_;
 	std::vector<std::string> podcasts_; //the itunes url of each podcast

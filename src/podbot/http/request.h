@@ -6,7 +6,7 @@
 
 namespace http {
 	class Request {
-		friend class http_client;
+		friend class HttpClient;
 	public:
 		Request();
 		~Request();

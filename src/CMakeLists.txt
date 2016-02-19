@@ -8,7 +8,8 @@ include_directories(
 	${Boost_INCLUDE_DIRS}
 	${MYSQL_INCLUDE_DIR}
 	${OPENSSL_INCLUDE_DIR}
-	)
+)
+
 add_executable(runpodbot ${CMAKE_SOURCE_DIR}/src/main.cpp)
 #target_link_libraries(runpodbot podbot ${Boost_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_SSL_LIBRARY})
 target_link_libraries(runpodbot podbot)

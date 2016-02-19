@@ -15,5 +15,5 @@ public:
     virtual ~HTTPTest();
 
     boost::asio::io_service io_;
-    http_client cl_;
+    HttpClient cl_;
 };

@@ -21,12 +21,14 @@ namespace http {
 		HeadersComplete
 	};
 
-	class http_client {
+	class HttpClient {
 	public:
-		http_client(boost::asio::io_service& io);
-		Response Req(Request* req);
+		HttpClient(boost::asio::io_service& io);
 
-	private:
+		//can throw a HTTPException
+		Response make_request(Request* req);
+
+private:
 		bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx);
 		void handle_parse_error(const char* what);
 
@@ -46,17 +48,16 @@ namespace http {
 		static int on_message_begin_cb(http_parser* parser);
 		static int on_header_complete_cb(http_parser* parser);
 
-		//std::shared_ptr<spdlog::logger> logger_;
+
 		HeaderParserState hps_;
 
 		boost::asio::io_service& service_;
 		boost::asio::ssl::context ssl_ctx_;
 		boost::asio::ip::tcp::resolver resolver_;
+
+		bool using_ssl_;
 		boost::asio::ip::tcp::socket socket_;
 		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket_;
-
-		boost::asio::streambuf request_;
-		boost::asio::streambuf response_;
 
 		std::string header_key_;
 		std::string header_value_;

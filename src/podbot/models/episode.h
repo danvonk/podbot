@@ -1,8 +1,8 @@
 #pragma once
 
-
 #include "common.h"
 #include "common/date_time.h"
+
 #include "db/connection.h"
 #include "db/prepared_statement.h"
 
